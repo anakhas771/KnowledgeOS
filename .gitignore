@@ -2,6 +2,9 @@
 .env
 *.env
 
+# Virtual Environment
+venv/
+.env
 
 # Python
 __pycache__/
@@ -9,12 +12,14 @@ __pycache__/
 *.sqlite3
 .pytest_cache/
 .coverage
-
+*$py.class
 
 # Django
 staticfiles/
 media/
-
+*.log
+db.sqlite3
+staticfiles/
 
 # Node
 node_modules/
