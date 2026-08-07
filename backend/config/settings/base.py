@@ -25,8 +25,6 @@ ALLOWED_HOSTS = [
 # Applications
 
 INSTALLED_APPS = [
-
-    # Django
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -34,15 +32,19 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 
-
-    # Third party
     "rest_framework",
     "corsheaders",
 
-
-    # Local apps
+    "apps.common",
+    "apps.accounts",
+    "apps.organizations",
+    "apps.documents",
+    "apps.knowledge",
+    "apps.ai_engine",
+    "apps.analytics",
 ]
 
+AUTH_USER_MODEL = "accounts.User"
 
 # Middleware
 
