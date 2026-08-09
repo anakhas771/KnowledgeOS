@@ -1,587 +1,219 @@
-# System Architecture
+# KnowledgeOS — AI Architecture Documentation
 
-# KnowledgeOS — Complete System Architecture Documentation
-
-**Document:** System Architecture Design
+**Document:** AI System Architecture
 
 **Version:** 1.0
 
-**Purpose:** Define the complete production architecture of KnowledgeOS Enterprise AI Knowledge Intelligence Platform.
+**Purpose:** Define the Artificial Intelligence architecture powering KnowledgeOS including RAG, embeddings, vector search, knowledge graphs, AI agents, and evaluation systems.
 
 ---
 
-# 1. System Architecture Overview
+# 1. AI Architecture Overview
 
-## Architecture Vision
+KnowledgeOS transforms company data into an intelligent AI knowledge system.
 
-KnowledgeOS follows a **modern cloud-native, AI-first SaaS architecture** designed for enterprise scalability, security, and reliability.
-
-The system combines:
-
-- Microservice-inspired modular backend architecture
-- AI-powered knowledge processing
-- Retrieval Augmented Generation (RAG)
-- Vector search
-- Knowledge graphs
-- AI agents
-- Multi-tenant SaaS architecture
-- Cloud-native deployment
-
----
-
-# 2. Complete System Architecture Diagram
-
-!diagram-export-8-3-2026-2_18_06-PM.png
-
----
-
-# 3. Architecture Layers
-
-KnowledgeOS is divided into seven layers.
-
-```
-1. Client Layer
-
-2. Edge Layer
-
-3. Application Layer
-
-4. Data Layer
-
-5. AI Intelligence Layer
-
-6. Integration Layer
-
-7. Infrastructure Layer
-```
-
----
-
-# 4. Client Layer
-
-## Purpose
-
-Provides user interaction with KnowledgeOS.
-
-Technology:
-
-```
-React
-TypeScript
-Tailwind CSS
-Shadcn UI
-Framer Motion
-React Query
-Zustand
-```
-
----
-
-## Applications
-
-### Employee Portal
-
-Used by:
-
-- Developers
-- Employees
-- Managers
-
-Features:
-
-- AI Chat
-- Search
-- Documents
-- Knowledge discovery
-
----
-
-### Admin Portal
-
-Used by:
-
-- Organization administrators
-
-Features:
-
-- User management
-- Permissions
-- Analytics
-- Integrations
-- Billing
-
----
-
-# Client Architecture
+The AI pipeline:
 
 !_- visual selection.png
 
 ---
 
-# 5. Edge Layer
+# 2. AI System Architecture
 
-## Components
-
-## CloudFront
-
-Responsibilities:
-
-- CDN
-- Static asset delivery
-- HTTPS termination
+!diagram-export-8-3-2026-2_22_08-PM.png
 
 ---
 
-## Application Load Balancer
+# 3. AI Technology Stack
 
-Responsibilities:
-
-- Traffic distribution
-- Health checks
-- SSL handling
-
----
-
-## Nginx
-
-Responsibilities:
-
-- Reverse proxy
-- Static files
-- Request forwarding
+| Component | Technology |
+| --- | --- |
+| LLM | OpenAI / Claude |
+| Framework | LangChain |
+| Data Processing | LlamaIndex |
+| Embeddings | HuggingFace/OpenAI Embeddings |
+| Vector Database | PostgreSQL pgvector / FAISS |
+| Search | OpenSearch |
+| AI Evaluation | RAGAS |
+| Agent Framework | LangGraph |
 
 ---
 
-# Request Flow
+# 4. Knowledge Ingestion Pipeline
+
+When a company uploads information:
 
 !_- visual selection.png
 
 ---
 
-# 6. Application Layer
+# 5. Document Processing Engine
 
-Main backend system.
+Responsibilities:
 
-Technology:
+- Extract text
+- Detect document type
+- Remove noise
+- Generate metadata
+- Create chunks
+- Generate embeddings
 
-```
-Python
+Example:
 
-Django REST Framework
-
-Celery
-
-Redis
-
-WebSockets
-
-JWT
-```
-
----
-
-# Backend Service Architecture
+Input:
 
 ```
-                 Django Application
+Engineering Handbook.pdf
+```
 
-                         |
+Output:
 
-                         |
+```python
+Chunk 1:
+Authentication Architecture
 
-              ---------------------
+Chunk 2:
+Deployment Process
 
-              |                   |
+Metadata:
 
-              v                   v
+Owner:
+Backend Team
 
-          API Layer        Business Layer
+Created:
+2026
 
-              |                   |
-
-              v                   v
-
-        Serializers        Services
-
-              |                   |
-
-              v                   v
-
-        Models             Repositories
-
-                         |
-
-                         |
-
-                         v
-
-                     Database
+Category:
+Engineering
 ```
 
 ---
 
-# Backend Modules
-
-## Authentication Service
-
-Responsible:
-
-- User registration
-- Login
-- JWT
-- OAuth
-- SSO
-
----
-
-## Organization Service
-
-Responsible:
-
-- Companies
-- Teams
-- Membership
-- Roles
-
----
-
-## Knowledge Service
-
-Responsible:
-
-- Documents
-- Knowledge sources
-- Metadata
-- Categories
-
----
-
-## AI Engine Service
-
-Responsible:
-
-- RAG pipeline
-- AI conversations
-- Agents
-- Prompt management
-
----
-
-## Search Service
-
-Responsible:
-
-- Semantic search
-- Keyword search
-- Hybrid ranking
-
----
-
-## Analytics Service
-
-Responsible:
-
-- Usage metrics
-- Knowledge insights
-- Reports
-
----
-
-## Integration Service
-
-Responsible:
-
-- GitHub sync
-- Slack sync
-- Jira sync
-
----
-
-# 7. Data Layer
-
-## Database Architecture
-
-KnowledgeOS uses multiple storage systems.
-
-```
-                 DATA LAYER
-
-                      |
-
- ------------------------------------------------
-
- |                     |                        |
-
-PostgreSQL          Redis                 Object Storage
-
-Business Data       Cache                 Files
-
-Metadata            Queue                 Documents
-
-Vectors             Sessions              Images
-```
-
----
-
-# PostgreSQL Database
-
-Stores:
-
-## User Data
-
-```
-users
-
-organizations
-
-teams
-
-roles
-
-permissions
-```
-
----
-
-## Knowledge Data
-
-```
-documents
-
-document_chunks
-
-document_metadata
-
-knowledge_sources
-```
-
----
-
-## AI Data
-
-```
-conversations
-
-messages
-
-ai_responses
-
-feedback
-```
-
----
-
-# pgvector
+# 6. Embedding Architecture
 
 Purpose:
 
-Store embeddings.
+Convert text into mathematical representations.
 
 Example:
 
-!pgvector.png
+```
+"How do I deploy?"
+
+        |
+
+Embedding Model
+
+        |
+
+[0.234,0.653,0.123...]
+```
+
+Stored in:
+
+```
+PostgreSQL + pgvector
+```
 
 ---
 
-# Redis
+# 7. Retrieval Augmented Generation (RAG)
 
-Used for:
+KnowledgeOS uses RAG to reduce hallucinations.
 
-## Cache
+Traditional AI:
+
+```
+Question
+
+ |
+
+LLM
+
+ |
+
+Answer
+```
+
+KnowledgeOS:
+
+```
+Question
+
+ |
+
+Semantic Search
+
+ |
+
+Company Knowledge
+
+ |
+
+LLM Reasoning
+
+ |
+
+Verified Answer
+```
+
+---
+
+# 8. RAG Pipeline
 
 Example:
 
-Popular AI queries
+Question:
 
----
+```
+How do we deploy payment service?
+```
 
-## Task Queue
-
-Celery broker:
+Process:
 
 !_- visual selection.png
 
 ---
 
-# Object Storage
+# 9. Knowledge Graph Architecture
 
-Production:
+KnowledgeOS understands relationships.
 
-AWS S3
-
-Stores:
-
-- Uploaded documents
-- Images
-- Videos
-- Meeting recordings
-
----
-
-# 8. AI Intelligence Layer
-
-This is the core of KnowledgeOS.
-
-Architecture:
-
-```
-                 User Question
-
-                       |
-
-                       v
-
-                AI Orchestrator
-
-                       |
-
-        --------------------------------
-
-        |              |               |
-
-        v              v               v
-
-   Retriever       Agent Router     Memory
-
-        |              |               |
-
-        v              v               v
-
-   Vector DB       AI Agents      Conversation DB
-
-        |
-
-        |
-
-        v
-
-      Context
-
-        |
-
-        |
-
-        v
-
-       LLM
-
-        |
-
-        |
-
-        v
-
-   Answer + Sources
-```
-
----
-
-# 9. RAG Architecture
-
-## Retrieval Pipeline
+Example:
 
 !_- visual selection.png
 
----
+Entities:
 
-# RAG Components
-
-## Embedding Service
-
-Technology:
-
-```
-OpenAI Embeddings
-
-or
-
-HuggingFace Models
-```
-
----
-
-## Vector Database
-
-Technology:
-
-```
-PostgreSQL
-
-+
-
-pgvector
-```
-
----
-
-## LLM Layer
-
-Providers:
-
-```
-OpenAI
-
-Claude
-
-Azure OpenAI
-
-Local Models
-```
+- Services
+- Teams
+- Technologies
+- Documents
+- Incidents
 
 ---
 
 # 10. AI Agent Architecture
 
-## Agent System
-
-```
-
-                AI Assistant
-
-                     |
-
-                     |
-
-              Agent Router
-
-                     |
-
- ---------------------------------
-
- |              |                 |
-
-Research     Documentation    Incident
-
-Agent        Agent            Agent
-
- |              |                 |
-
-Search        Generate          Analyze
-
-Knowledge     Docs              Logs
-```
-
----
-
-# Agent Responsibilities
-
-## Research Agent
-
-Finds:
-
-- Documents
-- Code
-- Previous discussions
-
----
+KnowledgeOS includes specialized AI agents.
 
 ## Documentation Agent
 
 Creates:
 
-- Guides
+- Documentation
 - FAQs
-- Summaries
+- Tutorials
+
+---
+
+## Research Agent
+
+Searches:
+
+- Documents
+- Code
+- Discussions
 
 ---
 
@@ -590,499 +222,92 @@ Creates:
 Analyzes:
 
 - Logs
-- Alerts
+- Errors
 - Previous incidents
 
 ---
 
 ## Meeting Agent
 
-Processes:
+Creates:
 
-- Audio
-- Transcript
+- Summaries
 - Decisions
+- Action items
 
 ---
 
-# 11. Knowledge Graph Architecture
-
-Purpose:
-
-Understand relationships.
-
-Technology:
-
-```
-Neo4j
-```
-
----
-
-Architecture:
+# 11. AI Agent Workflow
 
 !_- visual selection.png
 
 ---
 
-Entities:
+# 12. AI Memory System
 
-```
-Users
+Stores:
 
-Teams
-
-Documents
-
-Services
-
-Technologies
-
-Incidents
-
-Projects
-```
-
-Relationships:
-
-```
-OWNS
-
-USES
-
-DEPENDS_ON
-
-CREATED_BY
-
-RELATED_TO
-
-SOLVED_BY
-```
-
----
-
-# 12. Background Processing Architecture
-
-Technology:
-
-```
-Celery
-
-Redis
-
-Workers
-```
-
-Flow:
-
-```
-User Uploads Document
-
-          |
-
-          v
-
-      Django API
-
-          |
-
-          v
-
-       Celery Task
-
-          |
-
-          v
-
-      Worker
-
-          |
-
- ---------------------------
-
- |            |             |
-
-Extract     Generate      Store
-
-Text        Embeddings    Vector
-```
-
----
-
-# 13. Real-Time Communication Architecture
-
-Technology:
-
-```
-WebSockets
-
-Django Channels
-```
-
-Used for:
-
-- Streaming AI responses
-- Notifications
-- Collaboration
-
-Flow:
-
-!_- visual selection.png
-
----
-
-# 14. Security Architecture
-
-## Security Model
-
-!_- visual selection.png
-
----
-
-# Authentication
-
-Methods:
-
-```
-JWT
-
-OAuth2
-
-SSO
-```
-
----
-
-# Authorization
-
-RBAC:
-
-```
-Admin
-
-Manager
-
-Developer
-
-Employee
-
-Guest
-```
-
----
-
-# Data Security
-
-Implement:
-
-```
-HTTPS
-
-Encryption
-
-Secure Storage
-
-Secret Management
-
-Audit Logs
-
-Rate Limiting
-```
-
----
-
-# 15. Multi Tenant Architecture
-
-KnowledgeOS is SaaS.
-
-Architecture:
-
-```
-
-                 Platform
-
-                    |
-
-        -------------------------
-
-        |                       |
-
- Organization A           Organization B
-
-        |                       |
-
- Users                   Users
-
- Documents               Documents
-
- Knowledge               Knowledge
-
- AI Data                 AI Data
-```
-
----
-
-# Tenant Isolation Strategy
-
-Every major table contains:
-
-```
-organization_id
-```
+- Conversation history
+- User preferences
+- Previous context
 
 Example:
 
-Documents:
+User:
 
 ```
-id
-
-title
-
-content
-
-organization_id
-
-created_by
+Explain Kubernetes
 ```
+
+Later:
+
+```
+How does our team use it?
+```
+
+AI understands context.
 
 ---
 
-# 16. Monitoring Architecture
+# 13. AI Security
 
-Tools:
+AI must protect company data.
 
-```
-AWS CloudWatch
+Controls:
 
-Sentry
-
-Prometheus
-
-Grafana
-```
-
-Monitor:
-
-- API latency
-- Database performance
-- AI response time
-- Worker failures
-- Security events
+- Permission-aware retrieval
+- Prompt injection detection
+- Output filtering
+- Source verification
 
 ---
 
-# 17. Deployment Architecture
+# 14. AI Evaluation
 
-Production:
+Metrics:
 
-```
-
-                 Users
-
-                   |
-
-                   v
-
-               CloudFront
-
-                   |
-
-                   v
-
-                  ALB
-
-                   |
-
-                   v
-
-              ECS Cluster
-
-        -----------------------
-
-        |          |          |
-
-    Backend    Celery     Nginx
-
-        |          |
-
-        ----------------
-
-                   |
-
-                   v
-
-              AWS RDS
-
-             PostgreSQL
-
-                   |
-
-                   v
-
-              AWS S3
-
-                   |
-
-                   v
-
-             ElastiCache
-
-                Redis
-```
-
----
-
-# 18. CI/CD Architecture
-
-```
-
-Developer
-
-   |
-
-Git Push
-
-   |
-
-GitHub Repository
-
-   |
-
-GitHub Actions
-
-   |
-
--------------------------
-
-Tests
-
-Lint
-
-Security Scan
-
-Docker Build
-
--------------------------
-
-   |
-
-AWS ECR
-
-   |
-
-AWS ECS Deployment
-
-   |
-
-Production
-```
-
----
-
-# 19. Complete Technology Map
-
-## Frontend
-
-| Component | Technology |
+| Metric | Purpose |
 | --- | --- |
-| Framework | React |
-| Language | TypeScript |
-| Styling | Tailwind |
-| Components | Shadcn UI |
-| Animation | Framer Motion |
-| State | Zustand |
-| API Cache | React Query |
+| Accuracy | Correct answers |
+| Faithfulness | Based on documents |
+| Citation quality | Correct sources |
+| Retrieval quality | Relevant context |
+| Latency | Response speed |
 
 ---
 
-## Backend
+# 15. AI Architecture Outcome
 
-| Component | Technology |
-| --- | --- |
-| Framework | Django |
-| API | DRF |
-| Database | PostgreSQL |
-| Authentication | JWT |
-| Queue | Celery |
-| Cache | Redis |
+KnowledgeOS AI provides:
 
----
+✅ Enterprise RAG
 
-## AI
+✅ Semantic Search
 
-| Component | Technology |
-| --- | --- |
-| RAG | LangChain |
-| Retrieval | LlamaIndex |
-| Vector DB | pgvector |
-| Embeddings | HuggingFace |
-| Graph | Neo4j |
-| Models | OpenAI/Claude |
+✅ Knowledge Graphs
 
----
+✅ AI Agents
 
-## Infrastructure
+✅ Context Memory
 
-| Component | Technology |
-| --- | --- |
-| Containers | Docker |
-| CI/CD | GitHub Actions |
-| Cloud | AWS |
-| Registry | ECR |
-| Compute | ECS |
-| Database | RDS |
-| Storage | S3 |
-| IaC | Terraform |
-
----
-
-# 20. Architecture Principles
-
-KnowledgeOS follows:
-
-## Separation of Concerns
-
-Each module has a clear responsibility.
-
-## API First Design
-
-All functionality exposed through documented APIs.
-
-## Security By Design
-
-Security implemented from the beginning.
-
-## AI Reliability
-
-AI responses must be:
-
-- Grounded
-- Explainable
-- Traceable
-
-## Cloud Native
-
-Designed for:
-
-- Containers
-- Scaling
-- Automation
-
----
-
-# Final System Architecture Summary
-
-KnowledgeOS is a production-grade enterprise AI SaaS platform combining:
-
-- Modern React frontend
-- Django enterprise backend
-- PostgreSQL transactional storage
-- pgvector semantic search
-- RAG-based AI reasoning
-- AI agent framework
-- Knowledge graph intelligence
-- Cloud-native AWS deployment
-- Automated CI/CD pipeline
-
-This architecture is designed to demonstrate the engineering capabilities expected from a **Full Stack Engineer / Backend Engineer / AI Engineer in companies like Microsoft, Amazon, Atlassian, Google, Adobe, and Salesforce.**
+✅ Secure AI Responses
