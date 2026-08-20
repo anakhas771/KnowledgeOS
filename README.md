@@ -10,8 +10,11 @@ Stop searching. Start asking.
 
 </p>
 
-
----
+<p align="center">
+  <a href="https://skillicons.dev">
+    <img src="https://skillicons.dev/icons?i=python,django,react,typescript,postgresql,redis,docker,aws,terraform,nginx" />
+  </a>
+</p>
 
 # Overview
 
@@ -43,11 +46,7 @@ Employees can ask questions in natural language and receive accurate answers wit
 - Responsible teams
 - Recommended actions
   
-<p align="center">
-  <a href="https://skillicons.dev">
-    <img src="https://skillicons.dev/icons?i=python,django,react,typescript,postgresql,redis,docker,aws,terraform,nginx" />
-  </a>
-</p>
+
 
 ---
 
