@@ -1,8 +1,7 @@
 services:
 
   postgres:
-    image: postgres:16-alpine
-
+    image: pgvector/pgvector:pg16
     container_name: knowledgeos_db
 
     restart: always
@@ -31,7 +30,36 @@ services:
     ports:
       - "6380:6379"
 
+  celery-worker:
+    build:
+      context: ./backend
 
+    container_name: knowledgeos_celery_worker
+
+    restart: always
+
+    command:
+      celery -A config worker -l info
+
+    volumes:
+      - ./backend:/app
+
+    environment:
+      POSTGRES_DB: knowledgeos
+      POSTGRES_USER: knowledgeos_user
+      POSTGRES_PASSWORD: knowledgeos_password
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+
+    depends_on:
+      - postgres
+      - redis
+
+    networks:
+      - default
 
   backend:
 
