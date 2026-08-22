@@ -1,15 +1,19 @@
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-from rest_framework.permissions import IsAuthenticated
-from .serializers import RegisterSerializer, UserProfileSerializer
-from .jwt import KnowledgeOSTokenSerializer
 
+from apps.accounts.permissions import (
+    IsOrganizationAdmin,
+    IsOrganizationManager,
+)
+
+from .jwt import KnowledgeOSTokenSerializer
+from .serializers import RegisterSerializer, UserProfileSerializer
 
 class RegisterView(APIView):
     """Register a new organization and its initial user."""
@@ -58,3 +62,5 @@ class MeView(APIView):
         serializer = UserProfileSerializer(request.user)
 
         return Response(serializer.data)
+
+
