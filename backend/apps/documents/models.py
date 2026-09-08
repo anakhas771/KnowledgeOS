@@ -2,8 +2,7 @@ from django.conf import settings
 from django.db import models
 from pgvector.django import VectorField
 from apps.common.models import OrganizationOwnedModel
-
-
+from pgvector.django import HnswIndex
 class Document(OrganizationOwnedModel):
     """
     Represents a knowledge document owned by an organization.
@@ -88,10 +87,21 @@ class DocumentChunk(models.Model):
 
     class Meta:
         ordering = ["chunk_index"]
+
         constraints = [
             models.UniqueConstraint(
                 fields=["document", "chunk_index"],
                 name="unique_document_chunk_index",
+            ),
+        ]
+
+        indexes = [
+            HnswIndex(
+                name="document_chunk_embedding_hnsw",
+                fields=["embedding"],
+                m=16,
+                ef_construction=64,
+                opclasses=["vector_cosine_ops"],
             ),
         ]
 
