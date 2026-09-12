@@ -1,13 +1,16 @@
 from django.core.management.base import BaseCommand
 
-from apps.knowledge.evaluation.benchmark import run_benchmark
+from apps.knowledge.evaluation.benchmark import (
+    run_benchmark,
+    run_lexical_benchmark,
+)
 
 
 EVALUATION_ORG_SLUG = "knowledgeos-retrieval-evaluation"
 
 
 class Command(BaseCommand):
-    help = "Benchmark the current semantic retrieval implementation."
+    help = "Benchmark semantic and lexical retrieval."
 
     def handle(self, *args, **options):
         from apps.organizations.models import Organization
@@ -16,12 +19,34 @@ class Command(BaseCommand):
             slug=EVALUATION_ORG_SLUG,
         )
 
-        report = run_benchmark(
+        semantic_report = run_benchmark(
             organization_id=organization.id,
             limit=5,
         )
 
-        self.stdout.write("\nPer-query results:\n")
+        lexical_report = run_lexical_benchmark(
+            organization_id=organization.id,
+            limit=5,
+        )
+
+        self._print_report(
+            "Semantic Retrieval",
+            semantic_report,
+        )
+
+        self._print_report(
+            "Lexical Retrieval",
+            lexical_report,
+        )
+
+    def _print_report(
+        self,
+        name: str,
+        report: dict,
+    ) -> None:
+        self.stdout.write(f"\n{'=' * 60}")
+        self.stdout.write(name)
+        self.stdout.write("=" * 60)
 
         for row in report["cases"]:
             self.stdout.write(
@@ -38,7 +63,7 @@ class Command(BaseCommand):
 
         summary = report["summary"]
 
-        self.stdout.write("\nSummary:\n")
+        self.stdout.write("\nSummary:")
         self.stdout.write(
             f"Recall@1: {summary['recall_at_1']:.3f}"
         )
