@@ -82,6 +82,7 @@ def _build_case_result(
     )
 
     return {
+        "category": case.category,
         "query": case.query,
         "retrieved_document_ids": retrieved_document_ids,
         "relevant_document_ids": list(relevant_ids),
@@ -150,13 +151,25 @@ def _summarize(rows: list[dict]) -> dict:
     }
 
 
+def _summarize_by_category(rows: list[dict]) -> dict[str, dict]:
+    categories: dict[str, list[dict]] = {}
+
+    for row in rows:
+        categories.setdefault(
+            row["category"],
+            [],
+        ).append(row)
+
+    return {
+        category: _summarize(category_rows)
+        for category, category_rows in sorted(categories.items())
+    }
+
+
 def _run_benchmark(
     organization_id: int,
     limit: int,
-    search_fn: Callable[
-        [str, list[float] | None],
-        list[dict],
-    ],
+    search_fn: Callable[[str, list[float] | None], list[dict]],
     requires_embedding: bool,
 ) -> dict:
     title_to_id = _get_title_to_id(organization_id)
@@ -193,6 +206,7 @@ def _run_benchmark(
     return {
         "cases": rows,
         "summary": _summarize(rows),
+        "by_category": _summarize_by_category(rows),
     }
 
 
@@ -232,7 +246,7 @@ def run_lexical_benchmark(
     limit: int = 5,
 ) -> dict:
     """
-    Benchmark lexical retrieval without embedding overhead.
+    Benchmark lexical retrieval.
     """
 
     def lexical_search(
