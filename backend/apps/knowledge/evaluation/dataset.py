@@ -73,4 +73,41 @@ EVALUATION_CASES = (
         query="What technologies power the knowledge assistant from ingestion through generation?",
         relevant_document_titles=("KnowledgeOS Overview",),
     ),
+    # Multi-relevant cases
+    RetrievalEvaluationCase(
+        query="What happens between document upload and semantic search?",
+        relevant_document_titles=(
+            "Document Processing",
+            "Search and Retrieval",
+        ),
+    ),
+    RetrievalEvaluationCase(
+        query="How does KnowledgeOS authenticate users and isolate their organization's knowledge?",
+        relevant_document_titles=(
+            "Authentication and RBAC",
+            "Tenant Isolation",
+        ),
+    ),
+    RetrievalEvaluationCase(
+        query="What technologies are involved from document ingestion through semantic retrieval?",
+        relevant_document_titles=(
+            "KnowledgeOS Overview",
+            "Document Processing",
+            "Search and Retrieval",
+        ),
+    ),
+    RetrievalEvaluationCase(
+        query="Which parts of the system control API access and organization-scoped retrieval?",
+        relevant_document_titles=(
+            "Authentication and RBAC",
+            "Tenant Isolation",
+        ),
+    ),
+    RetrievalEvaluationCase(
+        query="How are uploaded documents turned into searchable knowledge and then retrieved?",
+        relevant_document_titles=(
+            "Document Processing",
+            "Search and Retrieval",
+        ),
+    ),
 )
