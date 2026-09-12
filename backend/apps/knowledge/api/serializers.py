@@ -1,5 +1,10 @@
 from rest_framework import serializers
 
+
+# ---------------------------------------------------------------------------
+# Search endpoint
+# ---------------------------------------------------------------------------
+
 class SearchRequestSerializer(serializers.Serializer):
     query = serializers.CharField(
         required=True, 
@@ -36,3 +41,21 @@ class SearchResponseSerializer(serializers.Serializer):
     query = serializers.CharField()
     results = SearchResultChunkSerializer(many=True)
     meta = SearchMetaSerializer()
+
+
+# ---------------------------------------------------------------------------
+# Ask (RAG) endpoint
+# ---------------------------------------------------------------------------
+
+class AskRequestSerializer(serializers.Serializer):
+    """
+    Validates the RAG ask request.
+    Only ``query`` is accepted from the client.
+    organization_id is ALWAYS derived from request.user — never from the payload.
+    """
+    query = serializers.CharField(
+        required=True,
+        allow_blank=False,
+        trim_whitespace=True,
+        max_length=2000,
+    )

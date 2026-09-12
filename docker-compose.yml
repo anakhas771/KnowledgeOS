@@ -54,6 +54,8 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/1
       EMBEDDING_SERVICE_URL: http://embedding-service:8100
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+      OLLAMA_MODEL: qwen3:4b-instruct-2507-q4_K_M
     depends_on:
       - postgres
       - redis
@@ -118,6 +120,10 @@ services:
       POSTGRES_PORT: 5432
 
       EMBEDDING_SERVICE_URL: http://embedding-service:8100
+
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+
+      OLLAMA_MODEL: qwen3:4b-instruct-2507-q4_K_M
 
 
     depends_on:
