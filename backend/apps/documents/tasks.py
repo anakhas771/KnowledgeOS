@@ -1,10 +1,12 @@
 from celery import shared_task
 from django.db import transaction
 
+from apps.documents.services.embeddings import embed_texts
+
 from .models import Document, DocumentChunk
 from .services.chunker import chunk_text
 from .services.processor import process_document
-from .services.embeddings import embed_text
+
 
 @shared_task(
     bind=True,
@@ -14,7 +16,7 @@ from .services.embeddings import embed_text
 )
 def process_document_task(self, document_id: int):
     """
-    Extract, normalize, chunk, and persist document content.
+    Extract, normalize, chunk, embed, and persist document content.
     """
 
     document = Document.objects.get(
@@ -50,6 +52,16 @@ def process_document_task(self, document_id: int):
                 "Document produced no usable chunks."
             )
 
+        chunk_embeddings = embed_texts(
+            [chunk.content for chunk in chunks]
+        )
+
+        if len(chunk_embeddings) != len(chunks):
+            raise ValueError(
+                "Embedding service returned an unexpected "
+                "number of embeddings."
+            )
+
         with transaction.atomic():
             DocumentChunk.objects.filter(
                 document=document,
@@ -61,11 +73,12 @@ def process_document_task(self, document_id: int):
                         document=document,
                         chunk_index=chunk.index,
                         content=chunk.content,
-                        embedding=embed_text(
-                            chunk.content
-                        ),
+                        embedding=embedding,
                     )
-                    for chunk in chunks
+                    for chunk, embedding in zip(
+                        chunks,
+                        chunk_embeddings,
+                    )
                 ]
             )
 
