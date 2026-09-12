@@ -75,7 +75,8 @@ class Command(BaseCommand):
 
         for row in report["cases"]:
             self.stdout.write(
-                f"\nQuery: {row['query']}\n"
+                f"\nCategory: {row['category']}\n"
+                f"Query: {row['query']}\n"
                 f"Retrieved: {row['retrieved_document_ids']}\n"
                 f"Relevant: {row['relevant_document_ids']}\n"
                 f"Recall@1: {row['recall_at_1']:.3f}\n"
@@ -108,3 +109,27 @@ class Command(BaseCommand):
             f"Median retrieval latency: "
             f"{summary['median_latency_ms']:.2f} ms"
         )
+
+        self.stdout.write("\nCategory Breakdown:")
+
+        for category, metrics in report["by_category"].items():
+            self.stdout.write(f"\n[{category}]")
+            self.stdout.write(
+                f"Recall@1: {metrics['recall_at_1']:.3f}"
+            )
+            self.stdout.write(
+                f"Recall@3: {metrics['recall_at_3']:.3f}"
+            )
+            self.stdout.write(
+                f"Recall@5: {metrics['recall_at_5']:.3f}"
+            )
+            self.stdout.write(
+                f"Precision@5: {metrics['precision_at_5']:.3f}"
+            )
+            self.stdout.write(
+                f"MRR: {metrics['mrr']:.3f}"
+            )
+            self.stdout.write(
+                f"Median latency: "
+                f"{metrics['median_latency_ms']:.2f} ms"
+            )
