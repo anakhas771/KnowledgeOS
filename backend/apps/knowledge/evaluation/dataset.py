@@ -5,6 +5,7 @@ from dataclasses import dataclass
 class RetrievalEvaluationCase:
     query: str
     relevant_document_titles: tuple[str, ...]
+    category: str = "general"
 
 
 EVALUATION_CASES = (
@@ -12,6 +13,7 @@ EVALUATION_CASES = (
     RetrievalEvaluationCase(
         query="What is KnowledgeOS?",
         relevant_document_titles=("KnowledgeOS Overview",),
+        category="direct",
     ),
     RetrievalEvaluationCase(
         query="How does JWT authentication work?",
@@ -109,5 +111,31 @@ EVALUATION_CASES = (
             "Document Processing",
             "Search and Retrieval",
         ),
+    ),
+        # Hard-negative cases
+    RetrievalEvaluationCase(
+        query="Which mechanism determines a user's role when accessing protected APIs?",
+        relevant_document_titles=("Authentication and RBAC",),
+        category="hard_negative",
+    ),
+    RetrievalEvaluationCase(
+        query="Which database capability supports vector similarity search?",
+        relevant_document_titles=("Search and Retrieval",),
+        category="hard_negative",
+    ),
+    RetrievalEvaluationCase(
+        query="What happens when uploaded document text is split into chunks before embedding?",
+        relevant_document_titles=("Document Processing",),
+        category="hard_negative",
+    ),
+    RetrievalEvaluationCase(
+        query="How does the platform prevent API requests from accessing another organization's knowledge?",
+        relevant_document_titles=("Tenant Isolation",),
+        category="hard_negative",
+    ),
+    RetrievalEvaluationCase(
+        query="Which part of KnowledgeOS turns company knowledge into AI-generated answers?",
+        relevant_document_titles=("KnowledgeOS Overview",),
+        category="hard_negative",
     ),
 )
