@@ -99,3 +99,16 @@ class LexicalRetrievalTestCase(TestCase):
         )
 
         self.assertEqual(results, [])
+
+    def test_paraphrased_query_returns_matching_document(self):
+        results = search_lexical_chunks(
+            organization_id=self.org_a.id,
+            query="How does authentication protect API access?",
+            limit=5,
+        )
+
+        self.assertEqual(len(results), 1)
+        self.assertEqual(
+            results[0]["document_id"],
+            self.doc_a.id,
+        )

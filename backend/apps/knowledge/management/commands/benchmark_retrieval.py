@@ -2,6 +2,7 @@ from django.core.management.base import BaseCommand
 
 from apps.knowledge.evaluation.benchmark import (
     run_benchmark,
+    run_hybrid_benchmark,
     run_lexical_benchmark,
 )
 
@@ -10,7 +11,7 @@ EVALUATION_ORG_SLUG = "knowledgeos-retrieval-evaluation"
 
 
 class Command(BaseCommand):
-    help = "Benchmark semantic and lexical retrieval."
+    help = "Benchmark semantic, lexical, and hybrid retrieval."
 
     def handle(self, *args, **options):
         from apps.organizations.models import Organization
@@ -29,6 +30,13 @@ class Command(BaseCommand):
             limit=5,
         )
 
+        hybrid_report = run_hybrid_benchmark(
+            organization_id=organization.id,
+            limit=5,
+            semantic_weight=0.7,
+            lexical_weight=0.3,
+        )
+
         self._print_report(
             "Semantic Retrieval",
             semantic_report,
@@ -37,6 +45,11 @@ class Command(BaseCommand):
         self._print_report(
             "Lexical Retrieval",
             lexical_report,
+        )
+
+        self._print_report(
+            "Hybrid Retrieval (70/30)",
+            hybrid_report,
         )
 
     def _print_report(
