@@ -1,30 +1,44 @@
-from functools import lru_cache
+import os
 
-from sentence_transformers import SentenceTransformer
-
-
-MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+import httpx
 
 
-@lru_cache(maxsize=1)
-def get_embedding_model() -> SentenceTransformer:
-    """
-    Load the embedding model once per worker process.
-    """
+EMBEDDING_SERVICE_URL = os.getenv(
+    "EMBEDDING_SERVICE_URL",
+    "http://embedding-service:8100",
+)
 
-    return SentenceTransformer(MODEL_NAME)
+
+def embed_texts(texts: list[str]) -> list[list[float]]:
+    if not texts:
+        return []
+
+    response = httpx.post(
+        f"{EMBEDDING_SERVICE_URL}/embed",
+        json={"texts": texts},
+        timeout=120.0,
+    )
+
+    response.raise_for_status()
+
+    payload = response.json()
+
+    embeddings = payload["embeddings"]
+
+    if not embeddings:
+        raise ValueError("Embedding service returned no embeddings.")
+
+    if len(embeddings[0]) != 384:
+        raise ValueError(
+            "Unexpected embedding dimensions: "
+            f"{len(embeddings[0])}"
+        )
+
+    return embeddings
 
 
 def embed_text(text: str) -> list[float]:
-    """
-    Generate a normalized embedding for a single text chunk.
-    """
+    if not text.strip():
+        raise ValueError("Text cannot be empty.")
 
-    model = get_embedding_model()
-
-    embedding = model.encode(
-        text,
-        normalize_embeddings=True,
-    )
-
-    return embedding.tolist()
+    return embed_texts([text])[0]
