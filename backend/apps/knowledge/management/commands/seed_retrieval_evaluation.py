@@ -74,6 +74,125 @@ DOCUMENTS = {
             "results by similarity."
         ),
     ],
+    "Authorization and Permissions": [
+        (
+            "Authorization determines which actions an authenticated "
+            "KnowledgeOS user may perform. Permissions are evaluated "
+            "after authentication and are based on the user's role."
+        ),
+        (
+            "Role-based authorization separates identity verification "
+            "from permission checks. A valid JWT identifies the user, "
+            "while authorization rules determine access to protected "
+            "operations."
+        ),
+    ],
+    "Organization Membership": [
+        (
+            "A KnowledgeOS user belongs to an organization. The "
+            "organization relationship is stored on the authenticated "
+            "user and establishes the tenant context for knowledge access."
+        ),
+        (
+            "Organization membership is different from application roles. "
+            "Membership determines which tenant a user belongs to, while "
+            "roles determine which protected actions the user may perform."
+        ),
+    ],
+    "Document Extraction": [
+        (
+            "Document extraction converts uploaded files into readable "
+            "text before downstream processing. The extracted content "
+            "becomes the input for normalization and chunk creation."
+        ),
+        (
+            "Extraction is an ingestion-stage operation. It prepares "
+            "content from supported document formats so the processing "
+            "pipeline can generate searchable text chunks."
+        ),
+    ],
+    "Chunking and Embeddings": [
+        (
+            "Chunking divides extracted document text into smaller "
+            "retrieval units. Each chunk can then be converted into a "
+            "vector embedding for semantic search."
+        ),
+        (
+            "KnowledgeOS stores embeddings alongside document chunks. "
+            "The embedding represents the semantic content used for "
+            "vector similarity retrieval."
+        ),
+    ],
+    "Ingestion Pipeline": [
+        (
+            "The ingestion pipeline moves uploaded knowledge through "
+            "extraction, normalization, chunking, embedding generation, "
+            "and storage before it becomes available for retrieval."
+        ),
+        (
+            "Asynchronous ingestion separates document processing from "
+            "the request that uploads the file, allowing retrieval-ready "
+            "knowledge to be prepared in the background."
+        ),
+    ],
+    "Vector Database": [
+        (
+            "KnowledgeOS uses PostgreSQL with pgvector to store document "
+            "embeddings and perform vector similarity operations."
+        ),
+        (
+            "The vector database layer supports cosine-distance searches "
+            "over document embeddings and uses an HNSW index for "
+            "approximate nearest-neighbor retrieval."
+        ),
+    ],
+    "Semantic Search": [
+        (
+            "Semantic search represents a user's query as an embedding "
+            "and compares it with stored document embeddings to identify "
+            "conceptually similar knowledge."
+        ),
+        (
+            "Semantic retrieval can find relevant content even when the "
+            "query uses wording different from the source document."
+        ),
+    ],
+    "AI Assistant Architecture": [
+        (
+            "The KnowledgeOS assistant combines retrieved knowledge "
+            "context with a language model to generate answers grounded "
+            "in organizational documents."
+        ),
+        (
+            "The assistant depends on an ingestion and retrieval pipeline "
+            "before generation. Documents must become searchable context "
+            "before the language model can answer questions from them."
+        ),
+    ],
+    "Knowledge Retrieval Architecture": [
+        (
+            "Knowledge retrieval connects query embedding, vector "
+            "similarity search, document chunks, and organization "
+            "filtering into a single retrieval flow."
+        ),
+        (
+            "Retrieval results are produced from stored document chunks "
+            "rather than directly querying the language model for company "
+            "knowledge."
+        ),
+    ],
+    "API Security": [
+        (
+            "Protected KnowledgeOS API endpoints require authenticated "
+            "requests. JWT authentication establishes the identity used "
+            "for access control and organization-aware retrieval."
+        ),
+        (
+            "API security combines authentication, authorization, and "
+            "tenant-aware filtering so protected knowledge operations "
+            "remain scoped to the requesting user."
+        ),
+    ],
 }
 
 
