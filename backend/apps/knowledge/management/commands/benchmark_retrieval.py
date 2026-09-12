@@ -4,6 +4,7 @@ from apps.knowledge.evaluation.benchmark import (
     run_benchmark,
     run_hybrid_benchmark,
     run_lexical_benchmark,
+    run_rrf_benchmark,
 )
 
 
@@ -11,7 +12,7 @@ EVALUATION_ORG_SLUG = "knowledgeos-retrieval-evaluation"
 
 
 class Command(BaseCommand):
-    help = "Benchmark semantic, lexical, and hybrid retrieval."
+    help = "Benchmark semantic, lexical, score-fusion, and RRF retrieval."
 
     def handle(self, *args, **options):
         from apps.organizations.models import Organization
@@ -37,6 +38,12 @@ class Command(BaseCommand):
             lexical_weight=0.3,
         )
 
+        rrf_report = run_rrf_benchmark(
+            organization_id=organization.id,
+            limit=5,
+            k=60,
+        )
+
         self._print_report(
             "Semantic Retrieval",
             semantic_report,
@@ -50,6 +57,11 @@ class Command(BaseCommand):
         self._print_report(
             "Hybrid Retrieval (70/30)",
             hybrid_report,
+        )
+
+        self._print_report(
+            "RRF Hybrid (k=60)",
+            rrf_report,
         )
 
     def _print_report(

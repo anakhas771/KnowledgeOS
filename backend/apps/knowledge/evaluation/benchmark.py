@@ -16,7 +16,7 @@ from apps.knowledge.services.hybrid import search_hybrid_chunks
 from apps.knowledge.services.lexical import search_lexical_chunks
 from apps.knowledge.services.query_embedding import embed_query
 from apps.knowledge.services.retrieval import search_similar_chunks
-
+from apps.knowledge.services.rrf import search_rrf_chunks
 
 def unique_preserving_order(values: list[int]) -> list[int]:
     """
@@ -287,5 +287,40 @@ def run_hybrid_benchmark(
         organization_id=organization_id,
         limit=limit,
         search_fn=hybrid_search,
+        requires_embedding=True,
+    )
+
+def run_rrf_benchmark(
+    organization_id: int,
+    limit: int = 5,
+    k: int = 60,
+) -> dict:
+    """
+    Benchmark Reciprocal Rank Fusion retrieval.
+    """
+
+    def rrf_search(
+        query: str,
+        query_embedding: list[float] | None,
+    ) -> list[dict]:
+        if query_embedding is None:
+            raise ValueError(
+                "RRF retrieval requires a query embedding."
+            )
+
+        return search_rrf_chunks(
+            organization_id=organization_id,
+            query=query,
+            query_embedding=query_embedding,
+            limit=limit,
+            semantic_limit=max(limit * 2, 10),
+            lexical_limit=max(limit * 2, 10),
+            k=k,
+        )
+
+    return _run_benchmark(
+        organization_id=organization_id,
+        limit=limit,
+        search_fn=rrf_search,
         requires_embedding=True,
     )
