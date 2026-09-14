@@ -143,3 +143,30 @@ class RAGDeterministicChecksTestCase(SimpleTestCase):
         )
         result = evaluate_case(case, "", ())
         self.assertIn("passed", result)
+
+# Phase 8 regression: dataset expanded; count/balance checks
+class RAGDatasetExpandedTestCase(SimpleTestCase):
+    def test_case_count_20(self):
+        from apps.knowledge.evaluation.rag_evaluation_dataset import RAG_EVALUATION_CASES
+        self.assertEqual(len(RAG_EVALUATION_CASES), 20)
+
+    def test_unique_ids(self):
+        from apps.knowledge.evaluation.rag_evaluation_dataset import RAG_EVALUATION_CASES
+        ids = [c.case_id for c in RAG_EVALUATION_CASES]
+        self.assertEqual(len(ids), len(set(ids)))
+
+    def test_unanswerable_present(self):
+        from apps.knowledge.evaluation.rag_evaluation_dataset import RAG_EVALUATION_CASES
+        unans = [c for c in RAG_EVALUATION_CASES if c.unanswerable]
+        self.assertGreaterEqual(len(unans), 3)
+
+    def test_category_distribution(self):
+        from apps.knowledge.evaluation.rag_evaluation_dataset import RAG_EVALUATION_CASES
+        counts = {}
+        for c in RAG_EVALUATION_CASES:
+            counts[c.category] = counts.get(c.category, 0) + 1
+        self.assertIn("direct", counts)
+        self.assertIn("paraphrased", counts)
+        self.assertIn("lexical", counts)
+        self.assertIn("multi_relevant", counts)
+        self.assertIn("hard_negative", counts)
