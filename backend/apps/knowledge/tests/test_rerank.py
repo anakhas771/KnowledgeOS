@@ -1,7 +1,10 @@
 from django.test import SimpleTestCase
 from unittest import mock
 
-from apps.knowledge.evaluation.benchmark import run_reranked_benchmark
+from apps.knowledge.evaluation.benchmark import (
+    run_reranked_benchmark,
+    run_rerank_candidate_pool_sweep,
+)
 from apps.knowledge.evaluation.rerank import (
     RerankConfig,
     rerank_candidates,
@@ -681,3 +684,156 @@ class RerankArtifactSerializationTestCase(SimpleTestCase):
         self.assertIn("lexical_weight", artifact["configuration"])
         self.assertIn("title_weight", artifact["configuration"])
 
+
+
+class CandidatePoolSweepTestCase(SimpleTestCase):
+    """Focused tests for the Phase 4 pool-size sensitivity experiment."""
+
+    def setUp(self):
+        patcher = mock.patch(
+            "apps.knowledge.evaluation.benchmark._get_title_to_id",
+            return_value={"Doc A": 1, "Doc B": 2, "Doc C": 3},
+        )
+        self.addCleanup(patcher.stop)
+        self.title_to_id = patcher.start()
+
+        embedding_patcher = mock.patch(
+            "apps.knowledge.evaluation.benchmark.embed_query",
+            return_value=[0.0] * 4,
+        )
+        self.addCleanup(embedding_patcher.stop)
+        self.embed_query = embedding_patcher.start()
+
+    def _case(self, query="test"):
+        from apps.knowledge.evaluation.dataset import RetrievalEvaluationCase
+        return RetrievalEvaluationCase(query=query, relevant_document_titles=("Doc A",), category="direct")
+
+    def _run_sweep(self, pool_sizes, candidates, cases=None, **kwargs):
+        cases = cases or [self._case()]
+        with mock.patch(
+            "apps.knowledge.evaluation.benchmark.search_similar_chunks",
+            side_effect=lambda organization_id, query_embedding, limit, **kw: [dict(c) for c in candidates],
+        ), mock.patch(
+            "apps.knowledge.evaluation.benchmark.EVALUATION_CASES",
+            tuple(cases),
+        ):
+            return run_rerank_candidate_pool_sweep(
+                organization_id=1,
+                pool_sizes=pool_sizes,
+                limit=5,
+                config=kwargs.get("config", RerankConfig()),
+            )
+
+    def test_sweep_evaluates_all_configured_pool_sizes(self):
+        results = self._run_sweep([5, 10, 15], [
+            make_candidate(i, i, content="test", score=0.9) for i in range(1, 6)
+        ])
+        self.assertEqual(sorted(results.keys()), [5, 10, 15])
+        for size in [5, 10, 15]:
+            self.assertIn("summary", results[size])
+            self.assertIn("by_category", results[size])
+            self.assertIn("configuration", results[size])
+
+    def test_pool_size_is_recorded_in_result_configuration(self):
+        results = self._run_sweep([5], [
+            make_candidate(1, 1, content="test", score=0.9)
+        ])
+        self.assertEqual(
+            results[5]["configuration"]["candidate_pool_size"],
+            5,
+        )
+        self.assertEqual(
+            results[5]["configuration"]["limit"],
+            5,
+        )
+
+    def test_final_limit_remains_fixed(self):
+        results = self._run_sweep([5, 10, 20], [
+            make_candidate(i, i, content="test", score=1.0 - i*0.01)
+            for i in range(1, 25)
+        ])
+        for size in results:
+            # The benchmark's final top-K must stay 5 regardless of pool.
+            for case_result in results[size]["cases"]:
+                self.assertLessEqual(
+                    len(case_result["retrieved_document_ids"]),
+                    5,
+                )
+
+    def test_pool_larger_than_available_candidates(self):
+        # Corpus only has 3 chunks; requesting pool=20 must not crash.
+        results = self._run_sweep([20], [
+            make_candidate(1, 1, content="a", score=0.9),
+            make_candidate(2, 2, content="b", score=0.8),
+            make_candidate(3, 3, content="c", score=0.7),
+        ])
+        self.assertIn(20, results)
+        # The result should include the available chunks (at most 3).
+        retrieved = results[20]["cases"][0]["retrieved_document_ids"]
+        self.assertLessEqual(len(retrieved), 3)
+
+    def test_pool_size_less_than_final_k_works(self):
+        results = self._run_sweep([2], [
+            make_candidate(1, 1, content="test", score=0.9),
+            make_candidate(2, 2, content="test", score=0.8),
+        ])
+        self.assertIn(2, results)
+        self.assertEqual(len(results[2]["cases"]), 1)
+
+    def test_duplicate_pool_sizes_are_deduplicated(self):
+        results = self._run_sweep([5, 5, 10, 10, 5], [
+            make_candidate(1, 1, content="test", score=0.9)
+        ])
+        # Deduplicated pool list means only 5 and 10 should appear.
+        self.assertEqual(sorted(results.keys()), [5, 10])
+
+    def test_empty_pool_list_raises(self):
+        with self.assertRaises(ValueError):
+            run_rerank_candidate_pool_sweep(
+                organization_id=1, pool_sizes=[], limit=5
+            )
+
+    def test_non_positive_pool_size_raises(self):
+        with self.assertRaises(ValueError):
+            run_rerank_candidate_pool_sweep(
+                organization_id=1, pool_sizes=[-1], limit=5
+            )
+        with self.assertRaises(ValueError):
+            run_rerank_candidate_pool_sweep(
+                organization_id=1, pool_sizes=[0], limit=5
+            )
+
+    def test_pool_size_equal_to_final_k(self):
+        results = self._run_sweep([5], [
+            make_candidate(i, i, content="test", score=0.9)
+            for i in range(1, 10)
+        ])
+        # When pool == K (5), no truncation beyond ranking occurs.
+        self.assertEqual(len(results[5]["cases"][0]["retrieved_document_ids"]), 5)
+
+    def test_same_corpus_and_case_conditions_across_pools(self):
+        # By using the same mock cases and retrieval function, we prove
+        # the only varying input is pool_size.
+        results_small = self._run_sweep([5], [
+            make_candidate(i, i, content="test", score=0.9) for i in range(1, 8)
+        ])
+        results_large = self._run_sweep([15], [
+            make_candidate(i, i, content="test", score=0.9) for i in range(1, 8)
+        ])
+        # Confirm results are present for requested pool sizes
+        self.assertIn(5, results_small)
+        self.assertIn(15, results_large)
+        for r in (results_small, results_large):
+            for s in r:
+                self.assertEqual(len(r[s]["cases"]), 1)
+
+    def test_configuration_not_mutated_between_pool_sizes(self):
+        results = self._run_sweep([5, 15], [
+            make_candidate(1, 1, content="a", title="Doc", score=0.9)
+        ], config=RerankConfig(semantic_weight=0.5, lexical_weight=0.3, title_weight=0.2))
+        for size in [5, 15]:
+            conf = results[size]["configuration"]
+            self.assertAlmostEqual(conf["semantic_weight"], 0.5)
+            self.assertAlmostEqual(conf["lexical_weight"], 0.3)
+            self.assertAlmostEqual(conf["title_weight"], 0.2)
+            self.assertTrue(conf["enabled"])
