@@ -78,3 +78,7 @@ class RetrievalMetricsTestCase(SimpleTestCase):
 
         with self.assertRaises(ValueError):
             precision_at_k([1, 2], [1], 0)
+
+    def test_empty_relevant_ids(self):
+        self.assertEqual(recall_at_k([1, 2, 3], [], 3), 0.0)
+        self.assertEqual(reciprocal_rank([1, 2, 3], []), 0.0)
