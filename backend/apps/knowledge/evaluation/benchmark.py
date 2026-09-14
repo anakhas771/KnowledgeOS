@@ -304,6 +304,32 @@ def run_hybrid_benchmark(
         requires_embedding=True,
     )
 
+def run_hybrid_weight_sweep(
+    organization_id: int,
+    limit: int = 5,
+) -> dict[tuple[float, float], dict]:
+    """
+    Benchmark hybrid retrieval across multiple semantic/lexical
+    weight configurations.
+    """
+    weight_pairs = (
+        (0.9, 0.1),
+        (0.8, 0.2),
+        (0.7, 0.3),
+        (0.6, 0.4),
+        (0.5, 0.5),
+    )
+
+    return {
+        (semantic_weight, lexical_weight): run_hybrid_benchmark(
+            organization_id=organization_id,
+            limit=limit,
+            semantic_weight=semantic_weight,
+            lexical_weight=lexical_weight,
+        )
+        for semantic_weight, lexical_weight in weight_pairs
+    }
+
 def run_rrf_benchmark(
     organization_id: int,
     limit: int = 5,
