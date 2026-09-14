@@ -16,6 +16,7 @@ from apps.knowledge.services.hybrid import search_hybrid_chunks
 from apps.knowledge.services.lexical import search_lexical_chunks
 from apps.knowledge.services.query_embedding import embed_query
 from apps.knowledge.services.retrieval import search_similar_chunks
+from apps.knowledge.evaluation.rerank import RerankConfig, rerank_pool
 from apps.knowledge.services.rrf import search_rrf_chunks
 
 def unique_preserving_order(values: list[int]) -> list[int]:
@@ -364,3 +365,57 @@ def run_rrf_benchmark(
         search_fn=rrf_search,
         requires_embedding=True,
     )
+
+
+def run_reranked_benchmark(
+    organization_id: int,
+    limit: int = 5,
+    config: RerankConfig | None = None,
+) -> dict:
+    """
+    Experimental benchmark: semantic retrieval followed by query-aware
+    reranking.
+
+    The candidate pool is retrieved with the same production semantic
+    retrieval used by ``run_benchmark``; the reranking stage is the only
+    intentional difference. Latency therefore includes both the wider
+    candidate retrieval and the reranking overhead.
+    """
+    rerank_config = config or RerankConfig()
+
+    def reranked_search(
+        query: str,
+        query_embedding: list[float] | None,
+    ) -> list[dict]:
+        if query_embedding is None:
+            raise ValueError(
+                "Reranked retrieval requires a query embedding."
+            )
+
+        candidates = search_similar_chunks(
+            organization_id=organization_id,
+            query_embedding=query_embedding,
+            limit=rerank_config.candidate_pool_size,
+        )
+
+        return rerank_pool(
+            candidates,
+            query,
+            limit=limit,
+            config=rerank_config,
+        )
+
+    report = _run_benchmark(
+        organization_id=organization_id,
+        limit=limit,
+        search_fn=reranked_search,
+        requires_embedding=True,
+    )
+
+    return {
+        **report,
+        "configuration": {
+            **rerank_config.as_dict(),
+            "limit": limit,
+        },
+    }

@@ -15,7 +15,8 @@ def build_experiment_artifact(
     corpus_slug: str = "knowledgeos-retrieval-evaluation",
     case_count: int = 25,
 ) -> dict:
-    """Build a deterministic, machine-readable benchmark artifact."""
+    """Build a deterministic, machine-readable benchmark artifact.
+    strategy may include 'reranked' identification."""
     return {
         "benchmark_id": benchmark_id,
         "timestamp": datetime.now(timezone.utc).isoformat(),

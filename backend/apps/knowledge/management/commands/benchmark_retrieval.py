@@ -5,8 +5,10 @@ from apps.knowledge.evaluation.benchmark import (
     run_hybrid_benchmark,
     run_hybrid_weight_sweep,
     run_lexical_benchmark,
+    run_reranked_benchmark,
     run_rrf_benchmark,
 )
+from apps.knowledge.evaluation.rerank import RerankConfig
 from apps.knowledge.evaluation.artifact import (
     build_experiment_artifact,
     write_artifact_atomic,
@@ -14,6 +16,19 @@ from apps.knowledge.evaluation.artifact import (
 import os
 
 EVALUATION_ORG_SLUG = "knowledgeos-retrieval-evaluation"
+
+RERANK_STRATEGY = "semantic+rerank(experimental)"
+
+DEFAULT_RERANK_CONFIG = RerankConfig()
+
+COMPARISON_METRICS = (
+    ("recall_at_1", "Recall@1"),
+    ("recall_at_3", "Recall@3"),
+    ("recall_at_5", "Recall@5"),
+    ("precision_at_5", "Precision@5"),
+    ("mrr", "MRR"),
+    ("median_latency_ms", "Median latency (ms)"),
+)
 
 
 class Command(BaseCommand):
@@ -31,6 +46,47 @@ class Command(BaseCommand):
             type=str,
             default="benchmark-run",
             help="Stable identifier for this experiment",
+        )
+        parser.add_argument(
+            "--rerank",
+            action="store_true",
+            help=(
+                "Run the experimental query-aware reranking benchmark and "
+                "compare it against the semantic baseline"
+            ),
+        )
+        parser.add_argument(
+            "--candidate-pool-size",
+            type=int,
+            default=DEFAULT_RERANK_CONFIG.candidate_pool_size,
+            help="Semantic candidate pool size retrieved before reranking",
+        )
+        parser.add_argument(
+            "--rerank-semantic-weight",
+            type=float,
+            default=DEFAULT_RERANK_CONFIG.semantic_weight,
+            help="Weight applied to the normalized semantic similarity",
+        )
+        parser.add_argument(
+            "--rerank-lexical-weight",
+            type=float,
+            default=DEFAULT_RERANK_CONFIG.lexical_weight,
+            help="Weight applied to query/content token overlap",
+        )
+        parser.add_argument(
+            "--rerank-title-weight",
+            type=float,
+            default=DEFAULT_RERANK_CONFIG.title_weight,
+            help="Weight applied to query/title token overlap",
+        )
+        parser.add_argument(
+            "--rerank-artifact",
+            type=str,
+            default=None,
+            help=(
+                "Write the reranking experiment results to this JSON "
+                "artifact path"
+            ),
         )
 
     def handle(self, *args, **options):
@@ -95,6 +151,32 @@ class Command(BaseCommand):
             hybrid_sweep,
         )
 
+        reranked_report = None
+
+        if options.get("rerank"):
+            rerank_config = RerankConfig(
+                candidate_pool_size=options["candidate_pool_size"],
+                semantic_weight=options["rerank_semantic_weight"],
+                lexical_weight=options["rerank_lexical_weight"],
+                title_weight=options["rerank_title_weight"],
+            )
+
+            reranked_report = run_reranked_benchmark(
+                organization_id=organization.id,
+                limit=5,
+                config=rerank_config,
+            )
+
+            self._print_report(
+                "Semantic + Query-Aware Reranking (experimental)",
+                reranked_report,
+            )
+
+            self._print_comparison(
+                baseline_report=semantic_report,
+                candidate_report=reranked_report,
+            )
+
         if options.get("artifact"):
             artifact_path = options["artifact"]
             artifact = build_experiment_artifact(
@@ -115,6 +197,79 @@ class Command(BaseCommand):
                     f"Artifact written to {artifact_path}"
                 )
             )
+
+        if options.get("rerank_artifact") and reranked_report is not None:
+            rerank_artifact_path = options["rerank_artifact"]
+            rerank_artifact = build_experiment_artifact(
+                benchmark_id=options.get("benchmark_id", "benchmark-run"),
+                strategy=RERANK_STRATEGY,
+                config=reranked_report["configuration"],
+                report=reranked_report,
+                corpus_slug=EVALUATION_ORG_SLUG,
+            )
+            write_artifact_atomic(rerank_artifact, rerank_artifact_path)
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"Rerank artifact written to {rerank_artifact_path}"
+                )
+            )
+        elif options.get("rerank_artifact"):
+            self.stdout.write(
+                self.style.WARNING(
+                    "--rerank-artifact requires --rerank; nothing written."
+                )
+            )
+
+    def _print_comparison(
+        self,
+        baseline_report: dict,
+        candidate_report: dict,
+    ) -> None:
+        """
+        Print reranked metrics against the semantic baseline.
+
+        Both reports are produced from the same corpus, cases, and evaluation
+        limit, so the deltas isolate the reranking stage.
+        """
+        self.stdout.write(f"\n{'=' * 60}")
+        self.stdout.write("Reranking vs Semantic Baseline")
+        self.stdout.write("=" * 60)
+
+        baseline_summary = baseline_report["summary"]
+        candidate_summary = candidate_report["summary"]
+
+        self.stdout.write("\nOverall:")
+
+        for key, label in COMPARISON_METRICS:
+            baseline_value = baseline_summary[key]
+            candidate_value = candidate_summary[key]
+            delta = candidate_value - baseline_value
+
+            self.stdout.write(
+                f"{label}: {baseline_value:.3f} -> {candidate_value:.3f} "
+                f"({delta:+.3f})"
+            )
+
+        self.stdout.write("\nBy category:")
+
+        baseline_categories = baseline_report["by_category"]
+        candidate_categories = candidate_report["by_category"]
+
+        for category in sorted(candidate_categories):
+            if category not in baseline_categories:
+                continue
+
+            self.stdout.write(f"\n[{category}]")
+
+            for key, label in COMPARISON_METRICS:
+                baseline_value = baseline_categories[category][key]
+                candidate_value = candidate_categories[category][key]
+                delta = candidate_value - baseline_value
+
+                self.stdout.write(
+                    f"{label}: {baseline_value:.3f} -> "
+                    f"{candidate_value:.3f} ({delta:+.3f})"
+                )
 
     def _print_hybrid_weight_sweep(
         self,
