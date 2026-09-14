@@ -7,12 +7,31 @@ from apps.knowledge.evaluation.benchmark import (
     run_lexical_benchmark,
     run_rrf_benchmark,
 )
+from apps.knowledge.evaluation.artifact import (
+    build_experiment_artifact,
+    write_artifact_atomic,
+)
+import os
 
 EVALUATION_ORG_SLUG = "knowledgeos-retrieval-evaluation"
 
 
 class Command(BaseCommand):
     help = "Benchmark semantic, lexical, score-fusion, and RRF retrieval."
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--artifact",
+            type=str,
+            default=None,
+            help="Write benchmark results to this JSON artifact path",
+        )
+        parser.add_argument(
+            "--benchmark-id",
+            type=str,
+            default="benchmark-run",
+            help="Stable identifier for this experiment",
+        )
 
     def handle(self, *args, **options):
         from apps.organizations.models import Organization
@@ -75,6 +94,28 @@ class Command(BaseCommand):
         self._print_hybrid_weight_sweep(
             hybrid_sweep,
         )
+
+        if options.get("artifact"):
+            artifact_path = options["artifact"]
+            artifact = build_experiment_artifact(
+                benchmark_id=options.get("benchmark_id", "benchmark-run"),
+                strategy="hybrid",
+                config={
+                    "semantic_weight": 0.7,
+                    "lexical_weight": 0.3,
+                    "limit": 5,
+                    "k_rrf": 60,
+                },
+                report=semantic_report,
+                corpus_slug=EVALUATION_ORG_SLUG,
+            )
+            write_artifact_atomic(artifact, artifact_path)
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"Artifact written to {artifact_path}"
+                )
+            )
+
     def _print_hybrid_weight_sweep(
         self,
         reports: dict[tuple[float, float], dict],
