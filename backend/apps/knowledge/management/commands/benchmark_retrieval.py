@@ -6,14 +6,15 @@ from apps.knowledge.evaluation.benchmark import (
     run_hybrid_weight_sweep,
     run_lexical_benchmark,
     run_reranked_benchmark,
+    run_rerank_candidate_pool_sweep,
     run_rrf_benchmark,
 )
 from apps.knowledge.evaluation.rerank import RerankConfig
 from apps.knowledge.evaluation.artifact import (
     build_experiment_artifact,
+    build_pool_sweep_artifact,
     write_artifact_atomic,
 )
-import os
 
 EVALUATION_ORG_SLUG = "knowledgeos-retrieval-evaluation"
 
@@ -80,12 +81,31 @@ class Command(BaseCommand):
             help="Weight applied to query/title token overlap",
         )
         parser.add_argument(
+            "--rerank-pools",
+            nargs="+",
+            type=int,
+            default=None,
+            help=(
+                "Candidate-pool sizes to sweep, e.g. --rerank-pools 5 10 "
+                "15 20. Omit to skip the sweep."
+            ),
+        )
+        parser.add_argument(
             "--rerank-artifact",
             type=str,
             default=None,
             help=(
                 "Write the reranking experiment results to this JSON "
                 "artifact path"
+            ),
+        )
+        parser.add_argument(
+            "--sweep-artifact",
+            type=str,
+            default=None,
+            help=(
+                "Write the candidate-pool sweep results to this JSON "
+                "artifact path (requires --rerank-pools)"
             ),
         )
 
@@ -142,16 +162,13 @@ class Command(BaseCommand):
             "RRF Hybrid (k=60)",
             rrf_report,
         )
-        self._print_report(
-            "Hybrid Retrieval (70/30)",
-            hybrid_report,
-        )
 
         self._print_hybrid_weight_sweep(
             hybrid_sweep,
         )
 
         reranked_report = None
+        sweep_results = None
 
         if options.get("rerank"):
             rerank_config = RerankConfig(
@@ -176,6 +193,44 @@ class Command(BaseCommand):
                 baseline_report=semantic_report,
                 candidate_report=reranked_report,
             )
+
+        if options.get("rerank_pools"):
+            # Deduplicate and validate the requested pool sizes.
+            pool_sizes_raw = options["rerank_pools"]
+            validated_pools = []
+            seen_pools: set[int] = set()
+            for s in pool_sizes_raw:
+                if s < 1:
+                    self.stdout.write(
+                        self.style.WARNING(
+                            f"Ignoring non-positive pool size: {s}"
+                        )
+                    )
+                    continue
+                if s in seen_pools:
+                    continue
+                seen_pools.add(s)
+                validated_pools.append(s)
+
+            if not validated_pools:
+                self.stdout.write(
+                    self.style.ERROR(
+                        "No valid pool sizes provided for sweep."
+                    )
+                )
+            else:
+                sweep_config = RerankConfig(
+                    semantic_weight=options["rerank_semantic_weight"],
+                    lexical_weight=options["rerank_lexical_weight"],
+                    title_weight=options["rerank_title_weight"],
+                )
+                sweep_results = run_rerank_candidate_pool_sweep(
+                    organization_id=organization.id,
+                    pool_sizes=validated_pools,
+                    limit=5,
+                    config=sweep_config,
+                )
+                self._print_pool_sweep(sweep_results)
 
         if options.get("artifact"):
             artifact_path = options["artifact"]
@@ -219,6 +274,77 @@ class Command(BaseCommand):
                     "--rerank-artifact requires --rerank; nothing written."
                 )
             )
+
+        if sweep_results is not None and options.get("sweep_artifact"):
+            sweep_artifact_path = options["sweep_artifact"]
+            sweep_artifact = build_pool_sweep_artifact(
+                benchmark_id=options.get("benchmark_id", "benchmark-run"),
+                strategy=RERANK_STRATEGY,
+                reports_by_pool=sweep_results,
+                final_k=5,
+                corpus_slug=EVALUATION_ORG_SLUG,
+            )
+            write_artifact_atomic(sweep_artifact, sweep_artifact_path)
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"Pool sweep artifact written to {sweep_artifact_path}"
+                )
+            )
+        elif options.get("sweep_artifact"):
+            self.stdout.write(
+                self.style.WARNING(
+                    "--sweep-artifact requires --rerank-pools; "
+                    "nothing written."
+                )
+            )
+
+    def _print_pool_sweep(
+        self,
+        results: dict[int, dict],
+    ) -> None:
+        self.stdout.write(f"\n{'=' * 60}")
+        self.stdout.write("Candidate Pool Size Sweep (Fixed K=5)")
+        self.stdout.write("=" * 60)
+
+        header_line = (
+            f"{'Pool':>8} | "
+            f"{'R@1':>6} | {'R@3':>6} | {'R@5':>6} | "
+            f"{'P@5':>6} | {'MRR':>6} | {'Latency(ms)':>14}"
+        )
+        self.stdout.write(header_line)
+        self.stdout.write("-" * len(header_line))
+
+        for size in sorted(results.keys()):
+            summary = results[size]["summary"]
+            self.stdout.write(
+                f"{size:>8} | "
+                f"{summary['recall_at_1']:>6.3f} | "
+                f"{summary['recall_at_3']:>6.3f} | "
+                f"{summary['recall_at_5']:>6.3f} | "
+                f"{summary['precision_at_5']:>6.3f} | "
+                f"{summary['mrr']:>6.3f} | "
+                f"{summary['median_latency_ms']:>14.2f}"
+            )
+
+        # Print category-level comparison for the smallest and largest pools
+        if len(sorted(results.keys())) > 1:
+            min_size = min(results)
+            max_size = max(results)
+            self.stdout.write(
+                f"\nCategory-level comparison: pool={min_size} vs {max_size}"
+            )
+            for category in sorted(results[min_size]["by_category"]):
+                if category not in results[max_size]["by_category"]:
+                    continue
+                self.stdout.write(f"\n[{category}]")
+                for (key, label) in COMPARISON_METRICS:
+                    min_val = results[min_size]["by_category"][category][key]
+                    max_val = results[max_size]["by_category"][category][key]
+                    delta = max_val - min_val
+                    self.stdout.write(
+                        f"  {label}: {min_val:.3f} -> {max_val:.3f} "
+                        f"({delta:+.3f})"
+                    )
 
     def _print_comparison(
         self,

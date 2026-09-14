@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import statistics
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 
 from apps.documents.models import Document
 from apps.knowledge.evaluation.dataset import EVALUATION_CASES
@@ -419,3 +419,55 @@ def run_reranked_benchmark(
             "limit": limit,
         },
     }
+
+
+def run_rerank_candidate_pool_sweep(
+    organization_id: int,
+    pool_sizes: Sequence[int] = (5, 10, 15, 20),
+    limit: int = 5,
+    config: RerankConfig | None = None,
+) -> dict[int, dict]:
+    """
+    Experimental sweep: vary only ``candidate_pool_size`` while holding
+    reranking weights, dataset, final K, and all benchmark conditions fixed.
+    Returns a mapping ``pool_size -> benchmark_report``.
+
+    The effective pool size may be smaller than the requested value when
+    the corpus provides fewer chunks; ``rerank_pool`` handles this cleanly.
+    """
+    rerank_config = config or RerankConfig()
+
+    if not pool_sizes:
+        raise ValueError("pool_sizes must contain at least one value.")
+
+    seen: set[int] = set()
+    validated: list[int] = []
+
+    for s in pool_sizes:
+        if s < 1:
+            raise ValueError(f"candidate_pool_size must be >= 1, got {s}")
+        if s in seen:
+            continue
+        seen.add(s)
+        validated.append(s)
+
+    results: dict[int, dict] = {}
+
+    for pool_size in validated:
+        # Only the pool size changes; all other rerank settings stay identical.
+        pool_config = RerankConfig(
+            enabled=rerank_config.enabled,
+            candidate_pool_size=pool_size,
+            semantic_weight=rerank_config.semantic_weight,
+            lexical_weight=rerank_config.lexical_weight,
+            title_weight=rerank_config.title_weight,
+            ignore_stopwords=rerank_config.ignore_stopwords,
+        )
+
+        results[pool_size] = run_reranked_benchmark(
+            organization_id=organization_id,
+            limit=limit,
+            config=pool_config,
+        )
+
+    return results
