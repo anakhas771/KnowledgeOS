@@ -1,6 +1,8 @@
 import os
 import importlib
 from unittest import mock
+import pytest
+from django.core.exceptions import ImproperlyConfigured
 
 def test_base_settings_parsing():
     """Verify that base settings parse comma-separated env variables properly."""
@@ -43,8 +45,8 @@ def test_development_settings():
 
 def test_production_settings_safe_fallback():
     """Verify production settings fail safely (empty list) rather than allowing wildcard."""
-    # Ensure environment has no HOST/CORS vars
-    with mock.patch.dict(os.environ, {}):
+    # Ensure environment has no HOST/CORS vars but has a valid SECRET_KEY
+    with mock.patch.dict(os.environ, {"SECRET_KEY": "valid-production-secret-key-12345"}):
         if "ALLOWED_HOSTS" in os.environ:
             del os.environ["ALLOWED_HOSTS"]
         if "CORS_ALLOWED_ORIGINS" in os.environ:
@@ -59,3 +61,20 @@ def test_production_settings_safe_fallback():
         assert prod_settings.CORS_ALLOWED_ORIGINS == []
         assert "*" not in prod_settings.ALLOWED_HOSTS
         assert prod_settings.DEBUG is False
+
+def test_production_secret_key_fails_fast():
+    """Verify production settings raise ImproperlyConfigured if SECRET_KEY is default or empty."""
+    with mock.patch("dotenv.load_dotenv"):
+        with mock.patch.dict(os.environ, {}, clear=True):
+            with pytest.raises(ImproperlyConfigured, match="SECRET_KEY must be explicitly configured in production"):
+                import config.settings.base as base_settings
+                importlib.reload(base_settings)
+                import config.settings.production as prod_settings
+                importlib.reload(prod_settings)
+
+        with mock.patch.dict(os.environ, {"SECRET_KEY": "development-secret-key"}):
+            with pytest.raises(ImproperlyConfigured, match="SECRET_KEY must be explicitly configured in production"):
+                import config.settings.base as base_settings
+                importlib.reload(base_settings)
+                import config.settings.production as prod_settings
+                importlib.reload(prod_settings)
