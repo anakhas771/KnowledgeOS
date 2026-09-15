@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import statistics
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 
 from apps.documents.models import Document
 from apps.knowledge.evaluation.dataset import EVALUATION_CASES
@@ -16,6 +16,7 @@ from apps.knowledge.services.hybrid import search_hybrid_chunks
 from apps.knowledge.services.lexical import search_lexical_chunks
 from apps.knowledge.services.query_embedding import embed_query
 from apps.knowledge.services.retrieval import search_similar_chunks
+from apps.knowledge.evaluation.rerank import RerankConfig, rerank_pool
 from apps.knowledge.services.rrf import search_rrf_chunks
 
 def unique_preserving_order(values: list[int]) -> list[int]:
@@ -364,3 +365,109 @@ def run_rrf_benchmark(
         search_fn=rrf_search,
         requires_embedding=True,
     )
+
+
+def run_reranked_benchmark(
+    organization_id: int,
+    limit: int = 5,
+    config: RerankConfig | None = None,
+) -> dict:
+    """
+    Experimental benchmark: semantic retrieval followed by query-aware
+    reranking.
+
+    The candidate pool is retrieved with the same production semantic
+    retrieval used by ``run_benchmark``; the reranking stage is the only
+    intentional difference. Latency therefore includes both the wider
+    candidate retrieval and the reranking overhead.
+    """
+    rerank_config = config or RerankConfig()
+
+    def reranked_search(
+        query: str,
+        query_embedding: list[float] | None,
+    ) -> list[dict]:
+        if query_embedding is None:
+            raise ValueError(
+                "Reranked retrieval requires a query embedding."
+            )
+
+        candidates = search_similar_chunks(
+            organization_id=organization_id,
+            query_embedding=query_embedding,
+            limit=rerank_config.candidate_pool_size,
+        )
+
+        return rerank_pool(
+            candidates,
+            query,
+            limit=limit,
+            config=rerank_config,
+        )
+
+    report = _run_benchmark(
+        organization_id=organization_id,
+        limit=limit,
+        search_fn=reranked_search,
+        requires_embedding=True,
+    )
+
+    return {
+        **report,
+        "configuration": {
+            **rerank_config.as_dict(),
+            "limit": limit,
+        },
+    }
+
+
+def run_rerank_candidate_pool_sweep(
+    organization_id: int,
+    pool_sizes: Sequence[int] = (5, 10, 15, 20),
+    limit: int = 5,
+    config: RerankConfig | None = None,
+) -> dict[int, dict]:
+    """
+    Experimental sweep: vary only ``candidate_pool_size`` while holding
+    reranking weights, dataset, final K, and all benchmark conditions fixed.
+    Returns a mapping ``pool_size -> benchmark_report``.
+
+    The effective pool size may be smaller than the requested value when
+    the corpus provides fewer chunks; ``rerank_pool`` handles this cleanly.
+    """
+    rerank_config = config or RerankConfig()
+
+    if not pool_sizes:
+        raise ValueError("pool_sizes must contain at least one value.")
+
+    seen: set[int] = set()
+    validated: list[int] = []
+
+    for s in pool_sizes:
+        if s < 1:
+            raise ValueError(f"candidate_pool_size must be >= 1, got {s}")
+        if s in seen:
+            continue
+        seen.add(s)
+        validated.append(s)
+
+    results: dict[int, dict] = {}
+
+    for pool_size in validated:
+        # Only the pool size changes; all other rerank settings stay identical.
+        pool_config = RerankConfig(
+            enabled=rerank_config.enabled,
+            candidate_pool_size=pool_size,
+            semantic_weight=rerank_config.semantic_weight,
+            lexical_weight=rerank_config.lexical_weight,
+            title_weight=rerank_config.title_weight,
+            ignore_stopwords=rerank_config.ignore_stopwords,
+        )
+
+        results[pool_size] = run_reranked_benchmark(
+            organization_id=organization_id,
+            limit=limit,
+            config=pool_config,
+        )
+
+    return results
