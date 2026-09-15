@@ -31,6 +31,7 @@ class AuthenticationService:
             email=email,
             password=password,
             organization=organization,
+            role=User.Role.ADMIN,
         )
 
         return user
