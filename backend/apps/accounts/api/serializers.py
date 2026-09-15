@@ -1,4 +1,4 @@
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, password_validation
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from apps.accounts.services.authentication import AuthenticationService
@@ -41,6 +41,14 @@ class RegisterSerializer(serializers.Serializer):
                 "An organization with this slug already exists."
             )
 
+        return value
+
+    def validate_password(self, value):
+        user = User(
+            username=self.initial_data.get("username", ""),
+            email=self.initial_data.get("email", ""),
+        )
+        password_validation.validate_password(value, user=user)
         return value
 
     def create(self, validated_data):
