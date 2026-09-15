@@ -609,6 +609,27 @@ Response + Citations
 
 ```
 
+## Retrieval & RAG Engineering
+
+KnowledgeOS includes an evaluated RAG pipeline built around PostgreSQL + pgvector, semantic retrieval, tenant-aware filtering, local embeddings, and local Qwen3 generation through Ollama.
+
+### Verified Evaluation Results
+
+- **90% correctness / pass rate**
+- **71.7% answer-point coverage**
+- **80% groundedness**
+- **72% source alignment**
+- **100% correct abstention**
+- **0% unsupported claims**
+
+The evaluation used a controlled 20-case dataset containing direct, paraphrased, lexical, multi-relevant, hard-negative, and unanswerable cases. Alternative retrieval strategies including lexical search, hybrid retrieval, RRF, and query-aware reranking were benchmarked before retaining semantic retrieval as the production baseline.
+
+**Performance:** semantic retrieval ~5-15 ms; generation ~8.5-10.5 s; total RAG response ~9-13.6 s. Generation is the dominant latency contributor.
+
+**Deep dive:** [Retrieval & RAG Engineering](docs/retrieval_rag_engineering.md) | [Interview Guide](docs/interview_guide.md) | [Evidence Index](docs/evidence_index.md)
+
+---
+
 ---
 
 # Repository Structure
