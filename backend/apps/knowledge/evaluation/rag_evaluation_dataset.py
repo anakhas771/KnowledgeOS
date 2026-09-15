@@ -10,19 +10,36 @@ Does NOT change production retrieval/generation/embedding/chunking.
 from __future__ import annotations
 
 from dataclasses import dataclass
-
+from typing import ClassVar
 
 @dataclass(frozen=True)
 class RAGEvaluationCase:
     case_id: str
     query: str
     relevant_document_titles: tuple[str, ...]
-    category: str  # direct / paraphrased / lexical / multi_relevant / hard_negative
+    category: str  # direct / paraphrased / lexical / multi_relevant / hard_negative / unanswerable
     answer_category: str = "factual"  # factual / multi_source / unanswerable / groundedness
     expected_answer_points: tuple[str, ...] = ()
     forbidden_claims: tuple[str, ...] = ()
     unanswerable: bool = False
     notes: str = ""
+
+    # Define allowed categories for validation
+    ALLOWED_CATEGORIES: ClassVar[tuple[str, ...]] = (
+        "direct", "paraphrased", "lexical", "multi_relevant",
+        "hard_negative", "unanswerable"
+    )
+
+    ALLOWED_ANSWER_CATEGORIES: ClassVar[tuple[str, ...]] = (
+        "factual", "multi_source", "unanswerable", "groundedness"
+    )
+
+    def __post_init__(self):
+        # Validate categories to catch inconsistencies
+        if self.category not in self.ALLOWED_CATEGORIES:
+            raise ValueError(f"Invalid category '{self.category}'. Must be one of {self.ALLOWED_CATEGORIES}")
+        if self.answer_category not in self.ALLOWED_ANSWER_CATEGORIES:
+            raise ValueError(f"Invalid answer_category '{self.answer_category}'. Must be one of {self.ALLOWED_ANSWER_CATEGORIES}")
 
 
 RAG_EVALUATION_CASES: tuple[RAGEvaluationCase, ...] = (
@@ -233,7 +250,7 @@ RAG_EVALUATION_CASES: tuple[RAGEvaluationCase, ...] = (
         case_id="rag_u01",
         query="What is the exact number of active users right now?",
         relevant_document_titles=(),
-        category="direct",
+        category="unanswerable",
         answer_category="unanswerable",
         unanswerable=True,
         expected_answer_points=(),
@@ -244,7 +261,7 @@ RAG_EVALUATION_CASES: tuple[RAGEvaluationCase, ...] = (
         case_id="rag_u02",
         query="Which specific employee registered document X on which exact date?",
         relevant_document_titles=(),
-        category="direct",
+        category="unanswerable",
         answer_category="unanswerable",
         unanswerable=True,
         expected_answer_points=(),
@@ -255,7 +272,7 @@ RAG_EVALUATION_CASES: tuple[RAGEvaluationCase, ...] = (
         case_id="rag_u03",
         query="How many chunks does the organization currently have in total?",
         relevant_document_titles=(),
-        category="lexical",
+        category="unanswerable",
         answer_category="unanswerable",
         unanswerable=True,
         expected_answer_points=(),
@@ -263,8 +280,6 @@ RAG_EVALUATION_CASES: tuple[RAGEvaluationCase, ...] = (
         notes="No aggregate chunk count in corpus; retrieval does not expose totals.",
     ),
 )
-
-
 def get_cases(category: str | None = None) -> tuple[RAGEvaluationCase, ...]:
     cases = RAG_EVALUATION_CASES
     if category is not None:
