@@ -170,3 +170,265 @@ class RAGDatasetExpandedTestCase(SimpleTestCase):
         self.assertIn("lexical", counts)
         self.assertIn("multi_relevant", counts)
         self.assertIn("hard_negative", counts)
+
+
+# ---------------------------------------------------------------------------
+# Phase 9 regression tests — forbidden-claim detection with negation/contrast
+# ---------------------------------------------------------------------------
+
+class RAGPhase9ForbiddenClaimRegressionTestCase(SimpleTestCase):
+    """
+    Focused tests for Phase 9 defect fixes:
+
+    1.  Import compatibility  — check_forbidden_claims / check_abstention_behavior
+    2.  Genuine assertion     → violation
+    3.  Explicit negation     → no violation
+    4.  Contrastive/separate  → no violation
+    5.  rag_h01 wording       → no false positive
+    6.  Unanswerable refusal  → no false positive
+    7.  Unsupported claim in unanswerable answer → violation
+    8.  Phase 7/8 existing behavior preserved
+    """
+
+    # ------------------------------------------------------------------ #
+    # 1. Import compatibility                                              #
+    # ------------------------------------------------------------------ #
+
+    def test_import_check_forbidden_claims(self):
+        """check_forbidden_claims must be importable (alias for enhanced)."""
+        from apps.knowledge.evaluation.rag_evaluator import (
+            check_forbidden_claims,
+            check_forbidden_claims_enhanced,
+        )
+        self.assertIs(check_forbidden_claims, check_forbidden_claims_enhanced)
+
+    def test_import_check_abstention_behavior(self):
+        """check_abstention_behavior must be importable (alias for enhanced)."""
+        from apps.knowledge.evaluation.rag_evaluator import (
+            check_abstention_behavior,
+            check_abstention_behavior_enhanced,
+        )
+        self.assertIs(check_abstention_behavior, check_abstention_behavior_enhanced)
+
+    # ------------------------------------------------------------------ #
+    # 2. Genuine forbidden assertion → violation                          #
+    # ------------------------------------------------------------------ #
+
+    def test_genuine_assertion_authentication_decides_role(self):
+        """'Authentication determines the user's role.' must be a violation."""
+        result = check_forbidden_claims(
+            "Authentication determines the user's role when accessing APIs.",
+            ("authentication decides role",),
+        )
+        self.assertFalse(result["passed"], msg="Genuine assertion must be a violation")
+        self.assertGreater(len(result["violations"]), 0)
+
+    def test_genuine_assertion_request_overrides_org(self):
+        """'The request can override the organization.' must be a violation."""
+        result = check_forbidden_claims(
+            "The request body can override the organization for retrieval.",
+            ("request can override organization",),
+        )
+        self.assertFalse(result["passed"], msg="Genuine assertion must be a violation")
+        self.assertGreater(len(result["violations"]), 0)
+
+    def test_genuine_assertion_exact_user_count(self):
+        """Stating an exact user count must be a violation."""
+        result = check_forbidden_claims(
+            "There are exactly 42 active users in the system.",
+            ("exactly 42 active users",),
+        )
+        self.assertFalse(result["passed"])
+        self.assertGreater(len(result["violations"]), 0)
+
+    # ------------------------------------------------------------------ #
+    # 3. Explicit negation → no violation                                 #
+    # ------------------------------------------------------------------ #
+
+    def test_explicit_negation_does_not_determine(self):
+        """'Authentication does not determine the role.' must pass."""
+        result = check_forbidden_claims(
+            "Authentication does not determine the user's role; "
+            "that is handled by the authorization layer.",
+            ("authentication decides role",),
+        )
+        self.assertTrue(result["passed"])
+        self.assertEqual(result["violations"], [])
+
+    def test_explicit_negation_does_not_decide(self):
+        """'X does not decide Y' phrasing must pass."""
+        result = check_forbidden_claims(
+            "Authentication does not decide which role a user holds.",
+            ("authentication decides role",),
+        )
+        self.assertTrue(result["passed"])
+        self.assertEqual(result["violations"], [])
+
+    def test_explicit_negation_cannot_override(self):
+        """'Request cannot override org' must pass."""
+        result = check_forbidden_claims(
+            "The request body cannot override the organization; "
+            "the scope is always read from the authenticated user record.",
+            ("request can override organization",),
+        )
+        self.assertTrue(result["passed"])
+        self.assertEqual(result["violations"], [])
+
+    # ------------------------------------------------------------------ #
+    # 4. Contrastive/separating statements → no violation                 #
+    # ------------------------------------------------------------------ #
+
+    def test_contrastive_while_separation(self):
+        """'X verifies identity, while Y evaluates role' must pass."""
+        result = check_forbidden_claims(
+            "Authentication verifies identity, while authorization evaluates "
+            "the user's role and decides which actions are permitted.",
+            ("authentication decides role",),
+        )
+        self.assertTrue(result["passed"])
+        self.assertEqual(result["violations"], [])
+
+    def test_contrastive_separation_distinct(self):
+        """'X is distinct from Y' must pass."""
+        result = check_forbidden_claims(
+            "Authentication is distinct from role assignment; "
+            "roles are determined by the permission layer.",
+            ("authentication decides role",),
+        )
+        self.assertTrue(result["passed"])
+        self.assertEqual(result["violations"], [])
+
+    def test_contrastive_separation_separate_from(self):
+        """'X is separate from Y' must pass."""
+        result = check_forbidden_claims(
+            "Identity verification is separate from role evaluation.",
+            ("authentication decides role",),
+        )
+        self.assertTrue(result["passed"])
+        self.assertEqual(result["violations"], [])
+
+    def test_contrastive_handles_partition(self):
+        """'X handles identity; Y handles role' must pass."""
+        result = check_forbidden_claims(
+            "Authentication handles identity verification; "
+            "role-based authorization handles access control.",
+            ("authentication decides role",),
+        )
+        self.assertTrue(result["passed"])
+        self.assertEqual(result["violations"], [])
+
+    def test_contrastive_not_for_phrasing(self):
+        """'Authentication is not for deciding roles' must pass."""
+        result = check_forbidden_claims(
+            "Authentication is not for deciding roles; it only verifies identity.",
+            ("authentication decides role",),
+        )
+        self.assertTrue(result["passed"])
+        self.assertEqual(result["violations"], [])
+
+    # ------------------------------------------------------------------ #
+    # 5. rag_h01 exact live answer → no false positive                    #
+    # ------------------------------------------------------------------ #
+
+    def test_rag_h01_no_false_positive(self):
+        """
+        The exact rag_h01 live answer that was producing a false positive
+        must now pass without a forbidden-claim violation.
+        """
+        answer = (
+            "Role-based authorization determines a user's role when accessing "
+            "protected APIs. This mechanism separates identity verification from "
+            "permission checks and uses roles to determine which protected actions "
+            "a user may perform."
+        )
+        result = check_forbidden_claims(
+            answer,
+            ("authentication decides role",),
+        )
+        self.assertTrue(
+            result["passed"],
+            msg=(
+                "rag_h01 answer should NOT be a forbidden-claim violation. "
+                f"Got violations: {result['violations']}"
+            ),
+        )
+
+    # ------------------------------------------------------------------ #
+    # 6. Unanswerable refusal mentioning the missing fact → no violation  #
+    # ------------------------------------------------------------------ #
+
+    def test_unanswerable_refusal_no_forbidden_violation(self):
+        """
+        An answer that refuses to state an exact number must not be a
+        forbidden-claim violation even if it mentions 'exact' or 'users'.
+        """
+        result = check_forbidden_claims(
+            "The knowledge base does not contain information about the exact "
+            "number of active users. I cannot provide that figure.",
+            ("Provides a specific user count", "exact number"),
+        )
+        self.assertTrue(result["passed"])
+        self.assertEqual(result["violations"], [])
+
+    # ------------------------------------------------------------------ #
+    # 7. Genuine unsupported claim in an 'unanswerable' answer → violation#
+    # ------------------------------------------------------------------ #
+
+    def test_genuine_claim_in_unanswerable_answer(self):
+        """
+        Even in a nominally unanswerable case, an answer that genuinely
+        asserts the forbidden claim must still be flagged.
+
+        The claim keywords ("authentication", "decides", "role") all appear
+        in the assertive answer, and the answer uses no negation or contrastive
+        language -- so the violation must be reported.
+        """
+        # Direct genuine assertion: "authentication decides role"
+        # This is the same claim as rag_h01 but without contrastive context.
+        result = check_forbidden_claims(
+            "Authentication decides the user's role when accessing APIs.",
+            ("authentication decides role",),
+        )
+        self.assertFalse(result["passed"])
+        self.assertGreater(len(result["violations"]), 0)
+
+    # ------------------------------------------------------------------ #
+    # 8. Phase 7/8 behavior preserved                                     #
+    # ------------------------------------------------------------------ #
+
+    def test_phase7_unrelated_answer_passes(self):
+        """Original Phase 7 test: unrelated answer must not be flagged."""
+        result = check_forbidden_claims(
+            "KnowledgeOS uses JWT authentication.",
+            ("exactly 42 active users",),
+        )
+        self.assertTrue(result["passed"])
+        self.assertEqual(result["violations"], [])
+
+    def test_phase7_matching_claim_detected(self):
+        """Original Phase 7 test: literal forbidden claim must be detected."""
+        result = check_forbidden_claims(
+            "There are exactly 42 active users.",
+            ("exactly 42 active users",),
+        )
+        self.assertFalse(result["passed"])
+
+    def test_phase8_evaluate_case_keys_present(self):
+        """evaluate_case must still return all expected keys."""
+        case = RAG_EVALUATION_CASES[0]
+        result = evaluate_case(
+            case,
+            "KnowledgeOS is an enterprise knowledge intelligence platform "
+            "providing semantic search and AI-assisted answers.",
+            case.relevant_document_titles,
+        )
+        for key in ("passed", "expected_points_result", "forbidden_result",
+                    "abstention_result", "source_alignment_result"):
+            self.assertIn(key, result)
+
+    def test_phase8_hard_negative_h01_dataset_entry(self):
+        """rag_h01 dataset entry must have the expected forbidden claim."""
+        from apps.knowledge.evaluation.rag_evaluation_dataset import RAG_EVALUATION_CASES
+        h01 = next((c for c in RAG_EVALUATION_CASES if c.case_id == "rag_h01"), None)
+        self.assertIsNotNone(h01)
+        self.assertIn("authentication decides role", h01.forbidden_claims)
