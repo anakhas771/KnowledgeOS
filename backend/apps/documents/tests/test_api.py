@@ -60,6 +60,78 @@ class DocumentAPITestCase(APITestCase):
             self.user,
         )
 
+    def test_unsupported_file_extension_rejected(self):
+        uploaded_file = SimpleUploadedFile(
+            "malicious.sh",
+            b"#!/bin/bash\necho 'hacked'",
+            content_type="application/x-sh",
+        )
+
+        response = self.client.post(
+            "/api/v1/documents/",
+            {
+                "title": "Malicious Script",
+                "file": uploaded_file,
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_400_BAD_REQUEST,
+        )
+        self.assertIn("file", response.data)
+        self.assertIn("Unsupported file extension", str(response.data["file"][0]))
+        self.assertFalse(Document.objects.filter(title="Malicious Script").exists())
+
+    def test_valid_extension_but_invalid_signature_rejected(self):
+        uploaded_file = SimpleUploadedFile(
+            "fake.pdf",
+            b"This is not a real PDF file",
+            content_type="application/pdf",
+        )
+
+        response = self.client.post(
+            "/api/v1/documents/",
+            {
+                "title": "Fake PDF",
+                "file": uploaded_file,
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_400_BAD_REQUEST,
+        )
+        self.assertIn("file", response.data)
+        self.assertIn("Invalid PDF file signature", str(response.data["file"][0]))
+        self.assertFalse(Document.objects.filter(title="Fake PDF").exists())
+
+    def test_text_file_with_binary_content_rejected(self):
+        uploaded_file = SimpleUploadedFile(
+            "test.txt",
+            b"Start of text\x00\x00\x00End of text",
+            content_type="text/plain",
+        )
+
+        response = self.client.post(
+            "/api/v1/documents/",
+            {
+                "title": "Binary Text",
+                "file": uploaded_file,
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_400_BAD_REQUEST,
+        )
+        self.assertIn("file", response.data)
+        self.assertIn("cannot contain binary content", str(response.data["file"][0]))
+        self.assertFalse(Document.objects.filter(title="Binary Text").exists())
+
     def test_authenticated_user_can_list_documents(self):
         Document.objects.create(
             organization=self.organization,
