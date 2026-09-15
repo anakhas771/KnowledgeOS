@@ -51,7 +51,9 @@ class AccountsAPITests(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("access", response.data)
-        self.assertIn("refresh", response.data)
+        self.assertNotIn("refresh", response.data)
+        self.assertTrue("refresh" in response.cookies)
+        self.assertEqual(response.cookies["refresh"]["httponly"], True)
 
     def test_me_view_authenticated_access(self):
         """Verify that an authenticated user can fetch their profile."""
