@@ -66,3 +66,38 @@ class AuthenticationServiceTests(TestCase):
         has_permission = permission.has_permission(request, view=None)
 
         self.assertTrue(has_permission, "The registered creator should pass admin permission checks.")
+
+    def test_admin_permissions_deny_employee(self):
+        """
+        Verify that an ordinary EMPLOYEE fails the IsOrganizationAdmin check.
+        """
+        org = Organization.objects.create(name="Org", slug="org")
+        user = User.objects.create_user(
+            username="employee",
+            email="employee@test.com",
+            password="password",
+            organization=org,
+        )
+
+        factory = APIRequestFactory()
+        request = factory.get("/")
+        request.user = user
+
+        permission = IsOrganizationAdmin()
+        has_permission = permission.has_permission(request, view=None)
+
+        self.assertFalse(has_permission, "An employee should fail admin permission checks.")
+
+    def test_admin_permissions_deny_unauthenticated(self):
+        """
+        Verify that an unauthenticated user fails the IsOrganizationAdmin check.
+        """
+        from django.contrib.auth.models import AnonymousUser
+        factory = APIRequestFactory()
+        request = factory.get("/")
+        request.user = AnonymousUser()
+
+        permission = IsOrganizationAdmin()
+        has_permission = permission.has_permission(request, view=None)
+
+        self.assertFalse(has_permission, "An unauthenticated user should fail admin permission checks.")
