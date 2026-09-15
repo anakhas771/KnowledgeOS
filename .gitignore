@@ -38,3 +38,5 @@ dist/
 # OS
 .DS_Store
 Thumbs.db
+# Evaluation generated output
+backend/phase9_artifact.json

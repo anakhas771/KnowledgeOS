@@ -1,0 +1,17 @@
+{
+  "pythonVersion": "3.11",
+  "venvPath": "backend",
+  "venv": "venv",
+  "extraPaths": [
+    "backend"
+  ],
+  "exclude": [
+    "backend/venv",
+    "backend/media",
+    "backend/staticfiles"
+  ],
+  "defineConstant": {
+    "DEBUG": true
+  },
+  "reportMissingModuleSource": "none"
+}

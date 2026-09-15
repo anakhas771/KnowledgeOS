@@ -1,0 +1,1951 @@
+{
+  "benchmark_id": "rag-phase9-empirical-v1",
+  "phase": "phase_9",
+  "timestamp": "2026-09-14T21:19:15Z",
+  "dataset_size": 20,
+  "category_distribution": {
+    "direct": 6,
+    "paraphrased": 4,
+    "lexical": 5,
+    "multi_relevant": 3,
+    "hard_negative": 2
+  },
+  "retrieval_config": {
+    "strategy": "semantic",
+    "top_k": 5,
+    "embedding_model": "all-MiniLM-L6-v2",
+    "chunking": "production_default",
+    "corpus": "evaluation_corpus",
+    "similarity": "cosine"
+  },
+  "generation_config": {
+    "service": "ollama_local",
+    "model": "qwen3:4b-instruct-2507-q4_K_M",
+    "prompt_version": "build_rag_prompt_v1"
+  },
+  "overall_metrics": {
+    "correctness_rate": 0.6,
+    "coverage_rate": 0.6583333333333333,
+    "groundedness_rate": 0.7,
+    "source_alignment_rate": 0.71,
+    "abstention_correct_rate": 1.0,
+    "unsupported_claim_rate": 0.25,
+    "overall_pass_rate": 0.6
+  },
+  "category_metrics": {
+    "direct": {
+      "total": 6,
+      "passed": 4,
+      "points": [
+        1.0,
+        1.0,
+        1.0,
+        0.5,
+        1.0,
+        1.0
+      ],
+      "grounded": 4,
+      "alignment": [
+        0.8,
+        1.0,
+        0.8,
+        0.8,
+        0.0,
+        0.4
+      ],
+      "abstention": [
+        true,
+        true
+      ],
+      "unsupported": 2,
+      "correctness": 0.6666666666666666,
+      "coverage": 0.9166666666666666,
+      "groundedness": 0.6666666666666666,
+      "source_alignment": 0.6333333333333333,
+      "abstention_rate": 1,
+      "unsupported_rate": 0.3333333333333333
+    },
+    "paraphrased": {
+      "total": 4,
+      "passed": 2,
+      "points": [
+        0.5,
+        0.0,
+        0.5,
+        0.0
+      ],
+      "grounded": 4,
+      "alignment": [
+        0.6,
+        0.8,
+        1.0,
+        1.0
+      ],
+      "abstention": [],
+      "unsupported": 0,
+      "correctness": 0.5,
+      "coverage": 0.25,
+      "groundedness": 1.0,
+      "source_alignment": 0.85,
+      "abstention_rate": null,
+      "unsupported_rate": 0.0
+    },
+    "lexical": {
+      "total": 5,
+      "passed": 4,
+      "points": [
+        0.5,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "grounded": 3,
+      "alignment": [
+        0.0,
+        1.0,
+        1.0,
+        1.0,
+        0.0
+      ],
+      "abstention": [
+        true
+      ],
+      "unsupported": 1,
+      "correctness": 0.8,
+      "coverage": 0.9,
+      "groundedness": 0.6,
+      "source_alignment": 0.6,
+      "abstention_rate": 1,
+      "unsupported_rate": 0.2
+    },
+    "multi_relevant": {
+      "total": 3,
+      "passed": 2,
+      "points": [
+        0.6666666666666666,
+        0.3333333333333333,
+        0.6666666666666666
+      ],
+      "grounded": 3,
+      "alignment": [
+        1.0,
+        1.0,
+        0.6
+      ],
+      "abstention": [],
+      "unsupported": 0,
+      "correctness": 0.6666666666666666,
+      "coverage": 0.5555555555555556,
+      "groundedness": 1.0,
+      "source_alignment": 0.8666666666666667,
+      "abstention_rate": null,
+      "unsupported_rate": 0.0
+    },
+    "hard_negative": {
+      "total": 2,
+      "passed": 0,
+      "points": [
+        0.0,
+        0.5
+      ],
+      "grounded": 0,
+      "alignment": [
+        0.8,
+        0.6
+      ],
+      "abstention": [],
+      "unsupported": 2,
+      "correctness": 0.0,
+      "coverage": 0.25,
+      "groundedness": 0.0,
+      "source_alignment": 0.7,
+      "abstention_rate": null,
+      "unsupported_rate": 1.0
+    }
+  },
+  "failure_summary": {
+    "A. retrieval failure": 1,
+    "C. generation failure": 7
+  },
+  "latency_summary": {
+    "median_retrieval_ms": 6.5,
+    "median_generation_ms": 7096.0,
+    "median_total_ms": 10116.5,
+    "note": "Empirical latency from single-threaded sequential run"
+  },
+  "per_case_results": [
+    {
+      "case_id": "rag_d01",
+      "question": "What is KnowledgeOS?",
+      "category": "direct",
+      "answer": "KnowledgeOS is an enterprise knowledge intelligence platform that centralizes organizational knowledge and provides semantic search and AI-assisted answers.",
+      "retrieved_sources": [
+        {
+          "chunk_id": 99,
+          "document_id": 5,
+          "document_title": "KnowledgeOS Overview",
+          "score": 0.8002
+        },
+        {
+          "chunk_id": 111,
+          "document_id": 11,
+          "document_title": "Organization Membership",
+          "score": 0.6
+        },
+        {
+          "chunk_id": 102,
+          "document_id": 6,
+          "document_title": "Authentication and RBAC",
+          "score": 0.5965
+        },
+        {
+          "chunk_id": 123,
+          "document_id": 17,
+          "document_title": "AI Assistant Architecture",
+          "score": 0.5574
+        },
+        {
+          "chunk_id": 100,
+          "document_id": 5,
+          "document_title": "KnowledgeOS Overview",
+          "score": 0.5496
+        }
+      ],
+      "expected_relevant_sources": [
+        "KnowledgeOS Overview"
+      ],
+      "evaluation_scores": {
+        "case_id": "rag_d01",
+        "category": "direct",
+        "answer_category": "factual",
+        "expected_points_result": {
+          "found_points": [
+            "enterprise knowledge intelligence platform",
+            "semantic search and AI-assisted answers"
+          ],
+          "missing_points": [],
+          "score": 1.0
+        },
+        "forbidden_result": {
+          "violations": [],
+          "passed": true
+        },
+        "abstention_result": {
+          "expected_abstain": false,
+          "detected_abstain": false
+        },
+        "source_alignment_result": {
+          "retrieved_titles": [
+            "KnowledgeOS Overview",
+            "Organization Membership",
+            "Authentication and RBAC",
+            "AI Assistant Architecture",
+            "KnowledgeOS Overview"
+          ],
+          "mentioned_in_answer": [
+            "KnowledgeOS Overview",
+            "Organization Membership",
+            "Authentication and RBAC",
+            "KnowledgeOS Overview"
+          ],
+          "citation_coverage": 0.8
+        },
+        "passed": true
+      },
+      "failure_classification": "N/A",
+      "latency": {
+        "embedding_ms": 56,
+        "retrieval_ms": 11,
+        "ttft_ms": 13948,
+        "generation_ms": 2909,
+        "total_ms": 16927,
+        "token_count": 24
+      }
+    },
+    {
+      "case_id": "rag_d02",
+      "question": "How does document ingestion work in KnowledgeOS?",
+      "category": "direct",
+      "answer": "Document ingestion in KnowledgeOS works by moving uploaded knowledge through a series of stages: extraction, normalization, chunking, embedding generation, and storage.First, document extraction converts uploaded files into readable text, preparing the content for downstream processing. This extraction is an ingestion-stage operation that ensures the processing pipeline can generate searchable text chunks.Next, the extracted content undergoes normalization and chunking, where it is divided into manageable segments. These chunks are then processed to generate vector embeddings, which allow the knowledge to be stored and retrieved efficiently. The system uses PostgreSQL with pgvector for storage of these embeddings.Additionally, asynchronous ingestion separates document processing from the upload request, enabling background preparation of retrieval-ready knowledge. This ensures that the final knowledge is ready for retrieval without delaying the user's request.",
+      "retrieved_sources": [
+        {
+          "chunk_id": 117,
+          "document_id": 14,
+          "document_title": "Ingestion Pipeline",
+          "score": 0.645
+        },
+        {
+          "chunk_id": 118,
+          "document_id": 14,
+          "document_title": "Ingestion Pipeline",
+          "score": 0.6144
+        },
+        {
+          "chunk_id": 100,
+          "document_id": 5,
+          "document_title": "KnowledgeOS Overview",
+          "score": 0.5947
+        },
+        {
+          "chunk_id": 113,
+          "document_id": 12,
+          "document_title": "Document Extraction",
+          "score": 0.5753
+        },
+        {
+          "chunk_id": 114,
+          "document_id": 12,
+          "document_title": "Document Extraction",
+          "score": 0.5503
+        }
+      ],
+      "expected_relevant_sources": [
+        "Document Processing",
+        "Ingestion Pipeline"
+      ],
+      "evaluation_scores": {
+        "case_id": "rag_d02",
+        "category": "direct",
+        "answer_category": "factual",
+        "expected_points_result": {
+          "found_points": [
+            "asynchronous processing through a task queue",
+            "documents converted into retrieval-ready form"
+          ],
+          "missing_points": [],
+          "score": 1.0
+        },
+        "forbidden_result": {
+          "violations": [],
+          "passed": true
+        },
+        "abstention_result": {
+          "expected_abstain": false,
+          "detected_abstain": false
+        },
+        "source_alignment_result": {
+          "retrieved_titles": [
+            "Ingestion Pipeline",
+            "Ingestion Pipeline",
+            "KnowledgeOS Overview",
+            "Document Extraction",
+            "Document Extraction"
+          ],
+          "mentioned_in_answer": [
+            "Ingestion Pipeline",
+            "Ingestion Pipeline",
+            "KnowledgeOS Overview",
+            "Document Extraction",
+            "Document Extraction"
+          ],
+          "citation_coverage": 1.0
+        },
+        "passed": true
+      },
+      "failure_classification": "N/A",
+      "latency": {
+        "embedding_ms": 161,
+        "retrieval_ms": 20,
+        "ttft_ms": 2999,
+        "generation_ms": 20166,
+        "total_ms": 23348,
+        "token_count": 159
+      }
+    },
+    {
+      "case_id": "rag_d03",
+      "question": "What is the purpose of chunking and embeddings?",
+      "category": "direct",
+      "answer": "The purpose of chunking is to divide extracted document text into smaller, manageable retrieval units. Each chunk is then converted into a vector embedding, which represents its semantic content. These embeddings enable semantic search through vector similarity retrieval, allowing the system to find relevant information efficiently. Together, chunking and embeddings facilitate the conversion of unstructured document content into searchable, meaningful data.",
+      "retrieved_sources": [
+        {
+          "chunk_id": 115,
+          "document_id": 13,
+          "document_title": "Chunking and Embeddings",
+          "score": 0.5824
+        },
+        {
+          "chunk_id": 116,
+          "document_id": 13,
+          "document_title": "Chunking and Embeddings",
+          "score": 0.4848
+        },
+        {
+          "chunk_id": 114,
+          "document_id": 12,
+          "document_title": "Document Extraction",
+          "score": 0.4772
+        },
+        {
+          "chunk_id": 117,
+          "document_id": 14,
+          "document_title": "Ingestion Pipeline",
+          "score": 0.4302
+        },
+        {
+          "chunk_id": 113,
+          "document_id": 12,
+          "document_title": "Document Extraction",
+          "score": 0.4292
+        }
+      ],
+      "expected_relevant_sources": [
+        "Chunking and Embeddings"
+      ],
+      "evaluation_scores": {
+        "case_id": "rag_d03",
+        "category": "direct",
+        "answer_category": "factual",
+        "expected_points_result": {
+          "found_points": [
+            "divide documents into retrieval units",
+            "convert into dense vector representations"
+          ],
+          "missing_points": [],
+          "score": 1.0
+        },
+        "forbidden_result": {
+          "violations": [],
+          "passed": true
+        },
+        "abstention_result": {
+          "expected_abstain": false,
+          "detected_abstain": false
+        },
+        "source_alignment_result": {
+          "retrieved_titles": [
+            "Chunking and Embeddings",
+            "Chunking and Embeddings",
+            "Document Extraction",
+            "Ingestion Pipeline",
+            "Document Extraction"
+          ],
+          "mentioned_in_answer": [
+            "Chunking and Embeddings",
+            "Chunking and Embeddings",
+            "Document Extraction",
+            "Document Extraction"
+          ],
+          "citation_coverage": 0.8
+        },
+        "passed": true
+      },
+      "failure_classification": "N/A",
+      "latency": {
+        "embedding_ms": 39,
+        "retrieval_ms": 6,
+        "ttft_ms": 2815,
+        "generation_ms": 9049,
+        "total_ms": 11911,
+        "token_count": 74
+      }
+    },
+    {
+      "case_id": "rag_d04",
+      "question": "How is retrieval filtered by tenant?",
+      "category": "direct",
+      "answer": "Retrieval is filtered by tenant through tenant-aware filtering that uses the authenticated user's organization context. The organization context is derived from the authenticated user, and retrieval queries are filtered to ensure that only content within that organization's scope is returned. This process is part of API security and tenant isolation, ensuring that knowledge operations remain scoped to the requesting user's organization.",
+      "retrieved_sources": [
+        {
+          "chunk_id": 105,
+          "document_id": 8,
+          "document_title": "Tenant Isolation",
+          "score": 0.5849
+        },
+        {
+          "chunk_id": 128,
+          "document_id": 19,
+          "document_title": "API Security",
+          "score": 0.4639
+        },
+        {
+          "chunk_id": 106,
+          "document_id": 8,
+          "document_title": "Tenant Isolation",
+          "score": 0.3791
+        },
+        {
+          "chunk_id": 122,
+          "document_id": 16,
+          "document_title": "Semantic Search",
+          "score": 0.3669
+        },
+        {
+          "chunk_id": 126,
+          "document_id": 18,
+          "document_title": "Knowledge Retrieval Architecture",
+          "score": 0.3602
+        }
+      ],
+      "expected_relevant_sources": [
+        "Tenant Isolation"
+      ],
+      "evaluation_scores": {
+        "case_id": "rag_d04",
+        "category": "direct",
+        "answer_category": "factual",
+        "expected_points_result": {
+          "found_points": [
+            "retrieval is filtered by organization on every query"
+          ],
+          "missing_points": [
+            "one tenant's knowledge invisible to another"
+          ],
+          "score": 0.5
+        },
+        "forbidden_result": {
+          "violations": [],
+          "passed": true
+        },
+        "abstention_result": {
+          "expected_abstain": false,
+          "detected_abstain": false
+        },
+        "source_alignment_result": {
+          "retrieved_titles": [
+            "Tenant Isolation",
+            "API Security",
+            "Tenant Isolation",
+            "Semantic Search",
+            "Knowledge Retrieval Architecture"
+          ],
+          "mentioned_in_answer": [
+            "Tenant Isolation",
+            "API Security",
+            "Tenant Isolation",
+            "Knowledge Retrieval Architecture"
+          ],
+          "citation_coverage": 0.8
+        },
+        "passed": true
+      },
+      "failure_classification": "N/A",
+      "latency": {
+        "embedding_ms": 41,
+        "retrieval_ms": 10,
+        "ttft_ms": 2432,
+        "generation_ms": 8863,
+        "total_ms": 11348,
+        "token_count": 73
+      }
+    },
+    {
+      "case_id": "rag_p01",
+      "question": "How does a user authenticate to the API?",
+      "category": "paraphrased",
+      "answer": "A user authenticates to the API by using JWT-based authentication. This involves the user providing credentials to obtain a JWT, which is then used to authenticate requests to protected KnowledgeOS API endpoints.",
+      "retrieved_sources": [
+        {
+          "chunk_id": 128,
+          "document_id": 19,
+          "document_title": "API Security",
+          "score": 0.5214
+        },
+        {
+          "chunk_id": 101,
+          "document_id": 6,
+          "document_title": "Authentication and RBAC",
+          "score": 0.4837
+        },
+        {
+          "chunk_id": 127,
+          "document_id": 19,
+          "document_title": "API Security",
+          "score": 0.4586
+        },
+        {
+          "chunk_id": 110,
+          "document_id": 10,
+          "document_title": "Authorization and Permissions",
+          "score": 0.4537
+        },
+        {
+          "chunk_id": 109,
+          "document_id": 10,
+          "document_title": "Authorization and Permissions",
+          "score": 0.4118
+        }
+      ],
+      "expected_relevant_sources": [
+        "Authentication and RBAC"
+      ],
+      "evaluation_scores": {
+        "case_id": "rag_p01",
+        "category": "paraphrased",
+        "answer_category": "factual",
+        "expected_points_result": {
+          "found_points": [
+            "JWT-based authentication"
+          ],
+          "missing_points": [
+            "token validated before endpoint access"
+          ],
+          "score": 0.5
+        },
+        "forbidden_result": {
+          "violations": [],
+          "passed": true
+        },
+        "abstention_result": {
+          "expected_abstain": false,
+          "detected_abstain": false
+        },
+        "source_alignment_result": {
+          "retrieved_titles": [
+            "API Security",
+            "Authentication and RBAC",
+            "API Security",
+            "Authorization and Permissions",
+            "Authorization and Permissions"
+          ],
+          "mentioned_in_answer": [
+            "API Security",
+            "Authentication and RBAC",
+            "API Security"
+          ],
+          "citation_coverage": 0.6
+        },
+        "passed": true
+      },
+      "failure_classification": "N/A",
+      "latency": {
+        "embedding_ms": 27,
+        "retrieval_ms": 7,
+        "ttft_ms": 2695,
+        "generation_ms": 4700,
+        "total_ms": 7431,
+        "token_count": 39
+      }
+    },
+    {
+      "case_id": "rag_p02",
+      "question": "What controls whether a user can use protected APIs?",
+      "category": "paraphrased",
+      "answer": "Authorization controls whether a user can use protected APIs. It determines which actions an authenticated user may perform, based on the user's role.",
+      "retrieved_sources": [
+        {
+          "chunk_id": 128,
+          "document_id": 19,
+          "document_title": "API Security",
+          "score": 0.6993
+        },
+        {
+          "chunk_id": 110,
+          "document_id": 10,
+          "document_title": "Authorization and Permissions",
+          "score": 0.4636
+        },
+        {
+          "chunk_id": 127,
+          "document_id": 19,
+          "document_title": "API Security",
+          "score": 0.454
+        },
+        {
+          "chunk_id": 101,
+          "document_id": 6,
+          "document_title": "Authentication and RBAC",
+          "score": 0.421
+        },
+        {
+          "chunk_id": 109,
+          "document_id": 10,
+          "document_title": "Authorization and Permissions",
+          "score": 0.3997
+        }
+      ],
+      "expected_relevant_sources": [
+        "Authorization and Permissions"
+      ],
+      "evaluation_scores": {
+        "case_id": "rag_p02",
+        "category": "paraphrased",
+        "answer_category": "factual",
+        "expected_points_result": {
+          "found_points": [],
+          "missing_points": [
+            "role-based permissions",
+            "permission layer evaluates role"
+          ],
+          "score": 0.0
+        },
+        "forbidden_result": {
+          "violations": [],
+          "passed": true
+        },
+        "abstention_result": {
+          "expected_abstain": false,
+          "detected_abstain": false
+        },
+        "source_alignment_result": {
+          "retrieved_titles": [
+            "API Security",
+            "Authorization and Permissions",
+            "API Security",
+            "Authentication and RBAC",
+            "Authorization and Permissions"
+          ],
+          "mentioned_in_answer": [
+            "API Security",
+            "Authorization and Permissions",
+            "API Security",
+            "Authorization and Permissions"
+          ],
+          "citation_coverage": 0.8
+        },
+        "passed": false
+      },
+      "failure_classification": "C. generation failure",
+      "latency": {
+        "embedding_ms": 26,
+        "retrieval_ms": 5,
+        "ttft_ms": 2183,
+        "generation_ms": 3287,
+        "total_ms": 5503,
+        "token_count": 28
+      }
+    },
+    {
+      "case_id": "rag_p03",
+      "question": "How is organizational membership managed?",
+      "category": "paraphrased",
+      "answer": "The context does not contain enough information to answer confidently about how organizational membership is managed. While it states that organizational membership determines which tenant a user belongs to and that the organization relationship is stored on the authenticated user, it does not explain the process or mechanism of managing organizational membership.",
+      "retrieved_sources": [
+        {
+          "chunk_id": 112,
+          "document_id": 11,
+          "document_title": "Organization Membership",
+          "score": 0.5316
+        },
+        {
+          "chunk_id": 111,
+          "document_id": 11,
+          "document_title": "Organization Membership",
+          "score": 0.4362
+        },
+        {
+          "chunk_id": 102,
+          "document_id": 6,
+          "document_title": "Authentication and RBAC",
+          "score": 0.4026
+        },
+        {
+          "chunk_id": 106,
+          "document_id": 8,
+          "document_title": "Tenant Isolation",
+          "score": 0.3979
+        },
+        {
+          "chunk_id": 105,
+          "document_id": 8,
+          "document_title": "Tenant Isolation",
+          "score": 0.3705
+        }
+      ],
+      "expected_relevant_sources": [
+        "Organization Membership"
+      ],
+      "evaluation_scores": {
+        "case_id": "rag_p03",
+        "category": "paraphrased",
+        "answer_category": "factual",
+        "expected_points_result": {
+          "found_points": [
+            "administrator manages organization configuration and membership"
+          ],
+          "missing_points": [
+            "organization read from user record rather than request"
+          ],
+          "score": 0.5
+        },
+        "forbidden_result": {
+          "violations": [],
+          "passed": true
+        },
+        "abstention_result": {
+          "expected_abstain": false,
+          "detected_abstain": false
+        },
+        "source_alignment_result": {
+          "retrieved_titles": [
+            "Organization Membership",
+            "Organization Membership",
+            "Authentication and RBAC",
+            "Tenant Isolation",
+            "Tenant Isolation"
+          ],
+          "mentioned_in_answer": [
+            "Organization Membership",
+            "Organization Membership",
+            "Authentication and RBAC",
+            "Tenant Isolation",
+            "Tenant Isolation"
+          ],
+          "citation_coverage": 1.0
+        },
+        "passed": true
+      },
+      "failure_classification": "N/A",
+      "latency": {
+        "embedding_ms": 30,
+        "retrieval_ms": 6,
+        "ttft_ms": 2675,
+        "generation_ms": 6820,
+        "total_ms": 9532,
+        "token_count": 56
+      }
+    },
+    {
+      "case_id": "rag_p04",
+      "question": "What happens when a document is uploaded?",
+      "category": "paraphrased",
+      "answer": "When a document is uploaded, the ingestion pipeline begins. The document undergoes asynchronous processing, which includes extraction (converting the file into readable text), normalization, chunking, embedding generation, and storage. The extracted content is then used for downstream processing, and retrieval-ready knowledge is prepared in the background. This process supports common knowledge formats such as TXT, Markdown, PDF, DOCX, and XLSX.",
+      "retrieved_sources": [
+        {
+          "chunk_id": 103,
+          "document_id": 7,
+          "document_title": "Document Processing",
+          "score": 0.6304
+        },
+        {
+          "chunk_id": 113,
+          "document_id": 12,
+          "document_title": "Document Extraction",
+          "score": 0.5439
+        },
+        {
+          "chunk_id": 118,
+          "document_id": 14,
+          "document_title": "Ingestion Pipeline",
+          "score": 0.4935
+        },
+        {
+          "chunk_id": 104,
+          "document_id": 7,
+          "document_title": "Document Processing",
+          "score": 0.3812
+        },
+        {
+          "chunk_id": 117,
+          "document_id": 14,
+          "document_title": "Ingestion Pipeline",
+          "score": 0.284
+        }
+      ],
+      "expected_relevant_sources": [
+        "Ingestion Pipeline",
+        "Document Processing"
+      ],
+      "evaluation_scores": {
+        "case_id": "rag_p04",
+        "category": "paraphrased",
+        "answer_category": "factual",
+        "expected_points_result": {
+          "found_points": [],
+          "missing_points": [
+            "processed asynchronously",
+            "extracted, normalized, chunked, embedded"
+          ],
+          "score": 0.0
+        },
+        "forbidden_result": {
+          "violations": [],
+          "passed": true
+        },
+        "abstention_result": {
+          "expected_abstain": false,
+          "detected_abstain": false
+        },
+        "source_alignment_result": {
+          "retrieved_titles": [
+            "Document Processing",
+            "Document Extraction",
+            "Ingestion Pipeline",
+            "Document Processing",
+            "Ingestion Pipeline"
+          ],
+          "mentioned_in_answer": [
+            "Document Processing",
+            "Document Extraction",
+            "Ingestion Pipeline",
+            "Document Processing",
+            "Ingestion Pipeline"
+          ],
+          "citation_coverage": 1.0
+        },
+        "passed": false
+      },
+      "failure_classification": "C. generation failure",
+      "latency": {
+        "embedding_ms": 24,
+        "retrieval_ms": 5,
+        "ttft_ms": 2911,
+        "generation_ms": 10358,
+        "total_ms": 13300,
+        "token_count": 84
+      }
+    },
+    {
+      "case_id": "rag_l01",
+      "question": "JWT token signature expiry validation endpoint access",
+      "category": "lexical",
+      "answer": "The provided context does not contain information about JWT token signature expiry validation for endpoint access. Therefore, I cannot answer the question confidently based on the given context.",
+      "retrieved_sources": [
+        {
+          "chunk_id": 127,
+          "document_id": 19,
+          "document_title": "API Security",
+          "score": 0.5313
+        },
+        {
+          "chunk_id": 110,
+          "document_id": 10,
+          "document_title": "Authorization and Permissions",
+          "score": 0.5233
+        },
+        {
+          "chunk_id": 101,
+          "document_id": 6,
+          "document_title": "Authentication and RBAC",
+          "score": 0.4674
+        },
+        {
+          "chunk_id": 128,
+          "document_id": 19,
+          "document_title": "API Security",
+          "score": 0.3123
+        },
+        {
+          "chunk_id": 109,
+          "document_id": 10,
+          "document_title": "Authorization and Permissions",
+          "score": 0.1834
+        }
+      ],
+      "expected_relevant_sources": [
+        "Authentication and RBAC",
+        "API Security"
+      ],
+      "evaluation_scores": {
+        "case_id": "rag_l01",
+        "category": "lexical",
+        "answer_category": "factual",
+        "expected_points_result": {
+          "found_points": [
+            "token signature and expiry validated"
+          ],
+          "missing_points": [
+            "rejected before reaching knowledge logic"
+          ],
+          "score": 0.5
+        },
+        "forbidden_result": {
+          "violations": [],
+          "passed": true
+        },
+        "abstention_result": {
+          "expected_abstain": false,
+          "detected_abstain": false
+        },
+        "source_alignment_result": {
+          "retrieved_titles": [
+            "API Security",
+            "Authorization and Permissions",
+            "Authentication and RBAC",
+            "API Security",
+            "Authorization and Permissions"
+          ],
+          "mentioned_in_answer": [],
+          "citation_coverage": 0.0
+        },
+        "passed": true
+      },
+      "failure_classification": "N/A",
+      "latency": {
+        "embedding_ms": 37,
+        "retrieval_ms": 11,
+        "ttft_ms": 2692,
+        "generation_ms": 3803,
+        "total_ms": 6545,
+        "token_count": 32
+      }
+    },
+    {
+      "case_id": "rag_l02",
+      "question": "pgvector cosine similarity retrieval chunk embedding",
+      "category": "lexical",
+      "answer": "KnowledgeOS converts document chunks into vector embeddings through chunking and embedding processes. These embeddings are stored alongside the document chunks in a vector database, which uses PostgreSQL with pgvector to store the embeddings and perform vector similarity operations. Semantic search retrieves similar document chunks by converting the user query into a384-dimensional embedding and using pgvector cosine similarity to find matching chunks. The vector database layer supports cosine-distance searches over these document embeddings using an HNSW index for approximate nearest-neighbor retrieval. Thus, pgvector cosine similarity is used to retrieve similar chunk embeddings during semantic search.",
+      "retrieved_sources": [
+        {
+          "chunk_id": 107,
+          "document_id": 9,
+          "document_title": "Search and Retrieval",
+          "score": 0.7456
+        },
+        {
+          "chunk_id": 120,
+          "document_id": 15,
+          "document_title": "Vector Database",
+          "score": 0.6538
+        },
+        {
+          "chunk_id": 116,
+          "document_id": 13,
+          "document_title": "Chunking and Embeddings",
+          "score": 0.5881
+        },
+        {
+          "chunk_id": 115,
+          "document_id": 13,
+          "document_title": "Chunking and Embeddings",
+          "score": 0.548
+        },
+        {
+          "chunk_id": 119,
+          "document_id": 15,
+          "document_title": "Vector Database",
+          "score": 0.5162
+        }
+      ],
+      "expected_relevant_sources": [
+        "Vector Database",
+        "Chunking and Embeddings"
+      ],
+      "evaluation_scores": {
+        "case_id": "rag_l02",
+        "category": "lexical",
+        "answer_category": "factual",
+        "expected_points_result": {
+          "found_points": [
+            "cosine similarity search",
+            "dense vector representations stored in pgvector"
+          ],
+          "missing_points": [],
+          "score": 1.0
+        },
+        "forbidden_result": {
+          "violations": [],
+          "passed": true
+        },
+        "abstention_result": {
+          "expected_abstain": false,
+          "detected_abstain": false
+        },
+        "source_alignment_result": {
+          "retrieved_titles": [
+            "Search and Retrieval",
+            "Vector Database",
+            "Chunking and Embeddings",
+            "Chunking and Embeddings",
+            "Vector Database"
+          ],
+          "mentioned_in_answer": [
+            "Search and Retrieval",
+            "Vector Database",
+            "Chunking and Embeddings",
+            "Chunking and Embeddings",
+            "Vector Database"
+          ],
+          "citation_coverage": 1.0
+        },
+        "passed": true
+      },
+      "failure_classification": "N/A",
+      "latency": {
+        "embedding_ms": 34,
+        "retrieval_ms": 5,
+        "ttft_ms": 2819,
+        "generation_ms": 14378,
+        "total_ms": 17238,
+        "token_count": 117
+      }
+    },
+    {
+      "case_id": "rag_l03",
+      "question": "organization tenant isolation retrieval filter user record",
+      "category": "lexical",
+      "answer": "KnowledgeOS enforces tenant isolation by associating documents with an organization and filtering retrieval queries using the authenticated user's organization. The organization context comes from the authenticated user, and the user's organization membership establishes the tenant context for knowledge access. API security combines authentication, authorization, and tenant-aware filtering to ensure protected knowledge operations remain scoped to the requesting user.",
+      "retrieved_sources": [
+        {
+          "chunk_id": 105,
+          "document_id": 8,
+          "document_title": "Tenant Isolation",
+          "score": 0.6929
+        },
+        {
+          "chunk_id": 128,
+          "document_id": 19,
+          "document_title": "API Security",
+          "score": 0.4071
+        },
+        {
+          "chunk_id": 112,
+          "document_id": 11,
+          "document_title": "Organization Membership",
+          "score": 0.384
+        },
+        {
+          "chunk_id": 106,
+          "document_id": 8,
+          "document_title": "Tenant Isolation",
+          "score": 0.3568
+        },
+        {
+          "chunk_id": 111,
+          "document_id": 11,
+          "document_title": "Organization Membership",
+          "score": 0.3394
+        }
+      ],
+      "expected_relevant_sources": [
+        "Tenant Isolation"
+      ],
+      "evaluation_scores": {
+        "case_id": "rag_l03",
+        "category": "lexical",
+        "answer_category": "factual",
+        "expected_points_result": {
+          "found_points": [
+            "retrieval filtered by organization",
+            "organization read from authenticated user"
+          ],
+          "missing_points": [],
+          "score": 1.0
+        },
+        "forbidden_result": {
+          "violations": [],
+          "passed": true
+        },
+        "abstention_result": {
+          "expected_abstain": false,
+          "detected_abstain": false
+        },
+        "source_alignment_result": {
+          "retrieved_titles": [
+            "Tenant Isolation",
+            "API Security",
+            "Organization Membership",
+            "Tenant Isolation",
+            "Organization Membership"
+          ],
+          "mentioned_in_answer": [
+            "Tenant Isolation",
+            "API Security",
+            "Organization Membership",
+            "Tenant Isolation",
+            "Organization Membership"
+          ],
+          "citation_coverage": 1.0
+        },
+        "passed": true
+      },
+      "failure_classification": "N/A",
+      "latency": {
+        "embedding_ms": 28,
+        "retrieval_ms": 16,
+        "ttft_ms": 1719,
+        "generation_ms": 8647,
+        "total_ms": 10411,
+        "token_count": 71
+      }
+    },
+    {
+      "case_id": "rag_l04",
+      "question": "semantic search AI-assisted answers grounding context",
+      "category": "lexical",
+      "answer": "Semantic search plays a key role in grounding AI-assisted answers in organizational context. It works by representing a user's query as an embedding and comparing it with stored document embeddings to identify conceptually similar knowledge. This allows the assistant to find relevant content even when the query uses wording different from the source document. The retrieved knowledge context is then combined with a language model to generate answers grounded in organizational documents. This process relies on an ingestion and retrieval pipeline that converts documents into searchable context before the language model can answer questions. Semantic search specifically converts a user query into a384-dimensional embedding and retrieves similar document chunks using pgvector cosine similarity.",
+      "retrieved_sources": [
+        {
+          "chunk_id": 123,
+          "document_id": 17,
+          "document_title": "AI Assistant Architecture",
+          "score": 0.5203
+        },
+        {
+          "chunk_id": 124,
+          "document_id": 17,
+          "document_title": "AI Assistant Architecture",
+          "score": 0.488
+        },
+        {
+          "chunk_id": 122,
+          "document_id": 16,
+          "document_title": "Semantic Search",
+          "score": 0.4485
+        },
+        {
+          "chunk_id": 121,
+          "document_id": 16,
+          "document_title": "Semantic Search",
+          "score": 0.4408
+        },
+        {
+          "chunk_id": 107,
+          "document_id": 9,
+          "document_title": "Search and Retrieval",
+          "score": 0.4131
+        }
+      ],
+      "expected_relevant_sources": [
+        "Semantic Search",
+        "Knowledge Retrieval Architecture"
+      ],
+      "evaluation_scores": {
+        "case_id": "rag_l04",
+        "category": "lexical",
+        "answer_category": "factual",
+        "expected_points_result": {
+          "found_points": [
+            "semantic search over organization knowledge",
+            "answers grounded in retrieved chunks"
+          ],
+          "missing_points": [],
+          "score": 1.0
+        },
+        "forbidden_result": {
+          "violations": [],
+          "passed": true
+        },
+        "abstention_result": {
+          "expected_abstain": false,
+          "detected_abstain": false
+        },
+        "source_alignment_result": {
+          "retrieved_titles": [
+            "AI Assistant Architecture",
+            "AI Assistant Architecture",
+            "Semantic Search",
+            "Semantic Search",
+            "Search and Retrieval"
+          ],
+          "mentioned_in_answer": [
+            "AI Assistant Architecture",
+            "AI Assistant Architecture",
+            "Semantic Search",
+            "Semantic Search",
+            "Search and Retrieval"
+          ],
+          "citation_coverage": 1.0
+        },
+        "passed": true
+      },
+      "failure_classification": "N/A",
+      "latency": {
+        "embedding_ms": 37,
+        "retrieval_ms": 14,
+        "ttft_ms": 2772,
+        "generation_ms": 15795,
+        "total_ms": 18618,
+        "token_count": 130
+      }
+    },
+    {
+      "case_id": "rag_m01",
+      "question": "How does KnowledgeOS authenticate users and control access to protected APIs?",
+      "category": "multi_relevant",
+      "answer": "KnowledgeOS authenticates users using JWT-based authentication for API access. Users must authenticate before accessing protected knowledge endpoints. Once authenticated, authorization determines which actions a user may perform based on their role. Role-based permissions control access to protected actions, with roles such as administrator, manager, developer, employee, and guest. Authentication establishes the user's identity for access control and organization-aware retrieval, and authorization evaluates permissions after authentication, ensuring that operations remain scoped to the requesting user.",
+      "retrieved_sources": [
+        {
+          "chunk_id": 101,
+          "document_id": 6,
+          "document_title": "Authentication and RBAC",
+          "score": 0.768
+        },
+        {
+          "chunk_id": 128,
+          "document_id": 19,
+          "document_title": "API Security",
+          "score": 0.7327
+        },
+        {
+          "chunk_id": 109,
+          "document_id": 10,
+          "document_title": "Authorization and Permissions",
+          "score": 0.7245
+        },
+        {
+          "chunk_id": 127,
+          "document_id": 19,
+          "document_title": "API Security",
+          "score": 0.7085
+        },
+        {
+          "chunk_id": 102,
+          "document_id": 6,
+          "document_title": "Authentication and RBAC",
+          "score": 0.5997
+        }
+      ],
+      "expected_relevant_sources": [
+        "Authentication and RBAC",
+        "Authorization and Permissions",
+        "API Security"
+      ],
+      "evaluation_scores": {
+        "case_id": "rag_m01",
+        "category": "multi_relevant",
+        "answer_category": "multi_source",
+        "expected_points_result": {
+          "found_points": [
+            "JWT authentication establishes identity",
+            "role-based permissions control access"
+          ],
+          "missing_points": [
+            "layered mechanisms combine authentication, authorization, and tenant filtering"
+          ],
+          "score": 0.6666666666666666
+        },
+        "forbidden_result": {
+          "violations": [],
+          "passed": true
+        },
+        "abstention_result": {
+          "expected_abstain": false,
+          "detected_abstain": false
+        },
+        "source_alignment_result": {
+          "retrieved_titles": [
+            "Authentication and RBAC",
+            "API Security",
+            "Authorization and Permissions",
+            "API Security",
+            "Authentication and RBAC"
+          ],
+          "mentioned_in_answer": [
+            "Authentication and RBAC",
+            "API Security",
+            "Authorization and Permissions",
+            "API Security",
+            "Authentication and RBAC"
+          ],
+          "citation_coverage": 1.0
+        },
+        "passed": true
+      },
+      "failure_classification": "N/A",
+      "latency": {
+        "embedding_ms": 27,
+        "retrieval_ms": 7,
+        "ttft_ms": 3153,
+        "generation_ms": 11436,
+        "total_ms": 14623,
+        "token_count": 94
+      }
+    },
+    {
+      "case_id": "rag_m02",
+      "question": "How does document ingestion lead from upload to retrieval?",
+      "category": "multi_relevant",
+      "answer": "Document ingestion begins when a file is uploaded. The ingestion pipeline processes the upload asynchronously, separating the upload request from the subsequent processing steps. First, document extraction converts the uploaded file into readable text, preparing it for downstream operations. This extracted content is then normalized, split into manageable chunks, and used to generate embeddings. These retrieval-ready chunks are stored in a database. Throughout this process, the system operates in the background, allowing the retrieval of searchable content to occur without blocking the initial request. As a result, once the ingestion pipeline completes, the knowledge is available for retrieval.",
+      "retrieved_sources": [
+        {
+          "chunk_id": 103,
+          "document_id": 7,
+          "document_title": "Document Processing",
+          "score": 0.703
+        },
+        {
+          "chunk_id": 118,
+          "document_id": 14,
+          "document_title": "Ingestion Pipeline",
+          "score": 0.6881
+        },
+        {
+          "chunk_id": 113,
+          "document_id": 12,
+          "document_title": "Document Extraction",
+          "score": 0.6819
+        },
+        {
+          "chunk_id": 117,
+          "document_id": 14,
+          "document_title": "Ingestion Pipeline",
+          "score": 0.5967
+        },
+        {
+          "chunk_id": 114,
+          "document_id": 12,
+          "document_title": "Document Extraction",
+          "score": 0.5554
+        }
+      ],
+      "expected_relevant_sources": [
+        "Document Processing",
+        "Ingestion Pipeline",
+        "Chunking and Embeddings",
+        "Vector Database"
+      ],
+      "evaluation_scores": {
+        "case_id": "rag_m02",
+        "category": "multi_relevant",
+        "answer_category": "multi_source",
+        "expected_points_result": {
+          "found_points": [
+            "asynchronous ingestion pipeline"
+          ],
+          "missing_points": [
+            "chunking and embedding produce dense vectors",
+            "pgvector stores and retrieves via cosine similarity"
+          ],
+          "score": 0.3333333333333333
+        },
+        "forbidden_result": {
+          "violations": [],
+          "passed": true
+        },
+        "abstention_result": {
+          "expected_abstain": false,
+          "detected_abstain": false
+        },
+        "source_alignment_result": {
+          "retrieved_titles": [
+            "Document Processing",
+            "Ingestion Pipeline",
+            "Document Extraction",
+            "Ingestion Pipeline",
+            "Document Extraction"
+          ],
+          "mentioned_in_answer": [
+            "Document Processing",
+            "Ingestion Pipeline",
+            "Document Extraction",
+            "Ingestion Pipeline",
+            "Document Extraction"
+          ],
+          "citation_coverage": 1.0
+        },
+        "passed": false
+      },
+      "failure_classification": "A. retrieval failure",
+      "latency": {
+        "embedding_ms": 23,
+        "retrieval_ms": 4,
+        "ttft_ms": 2242,
+        "generation_ms": 14294,
+        "total_ms": 16564,
+        "token_count": 116
+      }
+    },
+    {
+      "case_id": "rag_m03",
+      "question": "What makes retrieval both accurate and secure?",
+      "category": "multi_relevant",
+      "answer": "Retrieval is accurate due to semantic search, which can find relevant content even when the query uses wording different from the source document. Retrieval is secure through API security, which combines authentication, authorization, and tenant-aware filtering to ensure that protected knowledge operations remain scoped to the requesting user.",
+      "retrieved_sources": [
+        {
+          "chunk_id": 124,
+          "document_id": 17,
+          "document_title": "AI Assistant Architecture",
+          "score": 0.3657
+        },
+        {
+          "chunk_id": 118,
+          "document_id": 14,
+          "document_title": "Ingestion Pipeline",
+          "score": 0.3628
+        },
+        {
+          "chunk_id": 126,
+          "document_id": 18,
+          "document_title": "Knowledge Retrieval Architecture",
+          "score": 0.3392
+        },
+        {
+          "chunk_id": 122,
+          "document_id": 16,
+          "document_title": "Semantic Search",
+          "score": 0.33
+        },
+        {
+          "chunk_id": 128,
+          "document_id": 19,
+          "document_title": "API Security",
+          "score": 0.3219
+        }
+      ],
+      "expected_relevant_sources": [
+        "Search and Retrieval",
+        "Tenant Isolation",
+        "API Security"
+      ],
+      "evaluation_scores": {
+        "case_id": "rag_m03",
+        "category": "multi_relevant",
+        "answer_category": "multi_source",
+        "expected_points_result": {
+          "found_points": [
+            "tenant filtering restricts to user's organization",
+            "authorization layered after authentication"
+          ],
+          "missing_points": [
+            "semantic search using embeddings and cosine similarity"
+          ],
+          "score": 0.6666666666666666
+        },
+        "forbidden_result": {
+          "violations": [],
+          "passed": true
+        },
+        "abstention_result": {
+          "expected_abstain": false,
+          "detected_abstain": false
+        },
+        "source_alignment_result": {
+          "retrieved_titles": [
+            "AI Assistant Architecture",
+            "Ingestion Pipeline",
+            "Knowledge Retrieval Architecture",
+            "Semantic Search",
+            "API Security"
+          ],
+          "mentioned_in_answer": [
+            "Knowledge Retrieval Architecture",
+            "Semantic Search",
+            "API Security"
+          ],
+          "citation_coverage": 0.6
+        },
+        "passed": true
+      },
+      "failure_classification": "N/A",
+      "latency": {
+        "embedding_ms": 25,
+        "retrieval_ms": 5,
+        "ttft_ms": 2540,
+        "generation_ms": 7250,
+        "total_ms": 9822,
+        "token_count": 59
+      }
+    },
+    {
+      "case_id": "rag_h01",
+      "question": "Which mechanism determines a user's role when accessing protected APIs?",
+      "category": "hard_negative",
+      "answer": "Role-based authorization determines a user's role when accessing protected APIs. This mechanism separates identity verification from permission checks and assigns access based on the user's role.",
+      "retrieved_sources": [
+        {
+          "chunk_id": 128,
+          "document_id": 19,
+          "document_title": "API Security",
+          "score": 0.6844
+        },
+        {
+          "chunk_id": 112,
+          "document_id": 11,
+          "document_title": "Organization Membership",
+          "score": 0.5999
+        },
+        {
+          "chunk_id": 110,
+          "document_id": 10,
+          "document_title": "Authorization and Permissions",
+          "score": 0.5962
+        },
+        {
+          "chunk_id": 109,
+          "document_id": 10,
+          "document_title": "Authorization and Permissions",
+          "score": 0.5437
+        },
+        {
+          "chunk_id": 102,
+          "document_id": 6,
+          "document_title": "Authentication and RBAC",
+          "score": 0.4619
+        }
+      ],
+      "expected_relevant_sources": [
+        "Authentication and RBAC"
+      ],
+      "evaluation_scores": {
+        "case_id": "rag_h01",
+        "category": "hard_negative",
+        "answer_category": "factual",
+        "expected_points_result": {
+          "found_points": [],
+          "missing_points": [
+            "role checks happen after authentication succeeds",
+            "permission layer evaluates role, not authentication"
+          ],
+          "score": 0.0
+        },
+        "forbidden_result": {
+          "violations": [
+            "authentication decides role"
+          ],
+          "passed": false
+        },
+        "abstention_result": {
+          "expected_abstain": false,
+          "detected_abstain": false
+        },
+        "source_alignment_result": {
+          "retrieved_titles": [
+            "API Security",
+            "Organization Membership",
+            "Authorization and Permissions",
+            "Authorization and Permissions",
+            "Authentication and RBAC"
+          ],
+          "mentioned_in_answer": [
+            "API Security",
+            "Authorization and Permissions",
+            "Authorization and Permissions",
+            "Authentication and RBAC"
+          ],
+          "citation_coverage": 0.8
+        },
+        "passed": false
+      },
+      "failure_classification": "C. generation failure",
+      "latency": {
+        "embedding_ms": 30,
+        "retrieval_ms": 8,
+        "ttft_ms": 2444,
+        "generation_ms": 3782,
+        "total_ms": 6266,
+        "token_count": 32
+      }
+    },
+    {
+      "case_id": "rag_h02",
+      "question": "Can a user widen access by providing a different organization identifier?",
+      "category": "hard_negative",
+      "answer": "No, a user cannot widen access by providing a different organization identifier. The organization context for knowledge retrieval comes from the authenticated user and is not selectable or configurable by the user. Clients do not choose the organization used for knowledge retrieval; it is determined by the authenticated user's organization membership.",
+      "retrieved_sources": [
+        {
+          "chunk_id": 112,
+          "document_id": 11,
+          "document_title": "Organization Membership",
+          "score": 0.4041
+        },
+        {
+          "chunk_id": 111,
+          "document_id": 11,
+          "document_title": "Organization Membership",
+          "score": 0.3804
+        },
+        {
+          "chunk_id": 105,
+          "document_id": 8,
+          "document_title": "Tenant Isolation",
+          "score": 0.3777
+        },
+        {
+          "chunk_id": 102,
+          "document_id": 6,
+          "document_title": "Authentication and RBAC",
+          "score": 0.341
+        },
+        {
+          "chunk_id": 106,
+          "document_id": 8,
+          "document_title": "Tenant Isolation",
+          "score": 0.3308
+        }
+      ],
+      "expected_relevant_sources": [
+        "Tenant Isolation",
+        "API Security"
+      ],
+      "evaluation_scores": {
+        "case_id": "rag_h02",
+        "category": "hard_negative",
+        "answer_category": "factual",
+        "expected_points_result": {
+          "found_points": [
+            "organization read from user record, not request"
+          ],
+          "missing_points": [
+            "scope never taken from request body"
+          ],
+          "score": 0.5
+        },
+        "forbidden_result": {
+          "violations": [
+            "request can override organization"
+          ],
+          "passed": false
+        },
+        "abstention_result": {
+          "expected_abstain": false,
+          "detected_abstain": false
+        },
+        "source_alignment_result": {
+          "retrieved_titles": [
+            "Organization Membership",
+            "Organization Membership",
+            "Tenant Isolation",
+            "Authentication and RBAC",
+            "Tenant Isolation"
+          ],
+          "mentioned_in_answer": [
+            "Organization Membership",
+            "Organization Membership",
+            "Authentication and RBAC"
+          ],
+          "citation_coverage": 0.6
+        },
+        "passed": false
+      },
+      "failure_classification": "C. generation failure",
+      "latency": {
+        "embedding_ms": 27,
+        "retrieval_ms": 5,
+        "ttft_ms": 1844,
+        "generation_ms": 6942,
+        "total_ms": 8819,
+        "token_count": 58
+      }
+    },
+    {
+      "case_id": "rag_u01",
+      "question": "What is the exact number of active users right now?",
+      "category": "direct",
+      "answer": "The provided context does not contain any information about the exact number of active users right now. Therefore, I cannot answer this question confidently.",
+      "retrieved_sources": [
+        {
+          "chunk_id": 112,
+          "document_id": 11,
+          "document_title": "Organization Membership",
+          "score": 0.2057
+        },
+        {
+          "chunk_id": 102,
+          "document_id": 6,
+          "document_title": "Authentication and RBAC",
+          "score": 0.2014
+        },
+        {
+          "chunk_id": 111,
+          "document_id": 11,
+          "document_title": "Organization Membership",
+          "score": 0.1957
+        },
+        {
+          "chunk_id": 109,
+          "document_id": 10,
+          "document_title": "Authorization and Permissions",
+          "score": 0.1846
+        },
+        {
+          "chunk_id": 105,
+          "document_id": 8,
+          "document_title": "Tenant Isolation",
+          "score": 0.1418
+        }
+      ],
+      "expected_relevant_sources": [],
+      "evaluation_scores": {
+        "case_id": "rag_u01",
+        "category": "direct",
+        "answer_category": "unanswerable",
+        "expected_points_result": {
+          "found_points": [],
+          "missing_points": [],
+          "score": 1.0
+        },
+        "forbidden_result": {
+          "violations": [
+            "exact number"
+          ],
+          "passed": false
+        },
+        "abstention_result": {
+          "expected_abstain": true,
+          "detected_abstain": true,
+          "passed": true
+        },
+        "source_alignment_result": {
+          "retrieved_titles": [
+            "Organization Membership",
+            "Authentication and RBAC",
+            "Organization Membership",
+            "Authorization and Permissions",
+            "Tenant Isolation"
+          ],
+          "mentioned_in_answer": [],
+          "citation_coverage": 0.0
+        },
+        "passed": false
+      },
+      "failure_classification": "C. generation failure",
+      "latency": {
+        "embedding_ms": 23,
+        "retrieval_ms": 6,
+        "ttft_ms": 2472,
+        "generation_ms": 3311,
+        "total_ms": 5813,
+        "token_count": 28
+      }
+    },
+    {
+      "case_id": "rag_u02",
+      "question": "Which specific employee registered document X on which exact date?",
+      "category": "direct",
+      "answer": "The provided context does not contain any information about specific employees or the registration date of document X. Therefore, I cannot answer the question confidently.",
+      "retrieved_sources": [
+        {
+          "chunk_id": 126,
+          "document_id": 18,
+          "document_title": "Knowledge Retrieval Architecture",
+          "score": 0.2949
+        },
+        {
+          "chunk_id": 104,
+          "document_id": 7,
+          "document_title": "Document Processing",
+          "score": 0.2445
+        },
+        {
+          "chunk_id": 122,
+          "document_id": 16,
+          "document_title": "Semantic Search",
+          "score": 0.2429
+        },
+        {
+          "chunk_id": 124,
+          "document_id": 17,
+          "document_title": "AI Assistant Architecture",
+          "score": 0.2417
+        },
+        {
+          "chunk_id": 113,
+          "document_id": 12,
+          "document_title": "Document Extraction",
+          "score": 0.2378
+        }
+      ],
+      "expected_relevant_sources": [],
+      "evaluation_scores": {
+        "case_id": "rag_u02",
+        "category": "direct",
+        "answer_category": "unanswerable",
+        "expected_points_result": {
+          "found_points": [],
+          "missing_points": [],
+          "score": 1.0
+        },
+        "forbidden_result": {
+          "violations": [
+            "specific date",
+            "specific employee registered"
+          ],
+          "passed": false
+        },
+        "abstention_result": {
+          "expected_abstain": true,
+          "detected_abstain": true,
+          "passed": true
+        },
+        "source_alignment_result": {
+          "retrieved_titles": [
+            "Knowledge Retrieval Architecture",
+            "Document Processing",
+            "Semantic Search",
+            "AI Assistant Architecture",
+            "Document Extraction"
+          ],
+          "mentioned_in_answer": [
+            "Document Processing",
+            "Document Extraction"
+          ],
+          "citation_coverage": 0.4
+        },
+        "passed": false
+      },
+      "failure_classification": "C. generation failure",
+      "latency": {
+        "embedding_ms": 25,
+        "retrieval_ms": 5,
+        "ttft_ms": 2687,
+        "generation_ms": 3514,
+        "total_ms": 6233,
+        "token_count": 29
+      }
+    },
+    {
+      "case_id": "rag_u03",
+      "question": "How many chunks does the organization currently have in total?",
+      "category": "lexical",
+      "answer": "The context does not contain enough information to answer confidently how many chunks the organization currently has in total.",
+      "retrieved_sources": [
+        {
+          "chunk_id": 117,
+          "document_id": 14,
+          "document_title": "Ingestion Pipeline",
+          "score": 0.3176
+        },
+        {
+          "chunk_id": 114,
+          "document_id": 12,
+          "document_title": "Document Extraction",
+          "score": 0.2872
+        },
+        {
+          "chunk_id": 126,
+          "document_id": 18,
+          "document_title": "Knowledge Retrieval Architecture",
+          "score": 0.2828
+        },
+        {
+          "chunk_id": 103,
+          "document_id": 7,
+          "document_title": "Document Processing",
+          "score": 0.2513
+        },
+        {
+          "chunk_id": 115,
+          "document_id": 13,
+          "document_title": "Chunking and Embeddings",
+          "score": 0.2273
+        }
+      ],
+      "expected_relevant_sources": [],
+      "evaluation_scores": {
+        "case_id": "rag_u03",
+        "category": "lexical",
+        "answer_category": "unanswerable",
+        "expected_points_result": {
+          "found_points": [],
+          "missing_points": [],
+          "score": 1.0
+        },
+        "forbidden_result": {
+          "violations": [
+            "total chunks",
+            "current count"
+          ],
+          "passed": false
+        },
+        "abstention_result": {
+          "expected_abstain": true,
+          "detected_abstain": true,
+          "passed": true
+        },
+        "source_alignment_result": {
+          "retrieved_titles": [
+            "Ingestion Pipeline",
+            "Document Extraction",
+            "Knowledge Retrieval Architecture",
+            "Document Processing",
+            "Chunking and Embeddings"
+          ],
+          "mentioned_in_answer": [],
+          "citation_coverage": 0.0
+        },
+        "passed": false
+      },
+      "failure_classification": "C. generation failure",
+      "latency": {
+        "embedding_ms": 24,
+        "retrieval_ms": 7,
+        "ttft_ms": 3187,
+        "generation_ms": 2479,
+        "total_ms": 5699,
+        "token_count": 21
+      }
+    }
+  ]
+}
