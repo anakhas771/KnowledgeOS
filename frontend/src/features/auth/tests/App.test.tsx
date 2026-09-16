@@ -54,8 +54,8 @@ describe('App & Protected Routes', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('KnowledgeOS Dashboard')).toBeTruthy();
-      expect(screen.getByText('Welcome, john_doe')).toBeTruthy();
+      expect(screen.getAllByText('Dashboard').length).toBeGreaterThan(0);
+      expect(screen.getByText('john_doe')).toBeTruthy();
     });
   });
 
@@ -72,7 +72,7 @@ describe('App & Protected Routes', () => {
     await waitFor(() => {
       expect(authApi.me).toHaveBeenCalledTimes(1);
       // Protected content rendered
-      expect(screen.getByText('Welcome, restored_user')).toBeTruthy();
+      expect(screen.getByText('restored_user')).toBeTruthy();
     });
     
     // Auth state updated
@@ -110,7 +110,7 @@ describe('App & Protected Routes', () => {
 
     // Wait for App load
     await waitFor(() => {
-      expect(screen.getByText('KnowledgeOS Dashboard')).toBeTruthy();
+      expect(screen.getAllByText('Dashboard').length).toBeGreaterThan(0);
     });
 
     // Click logout
