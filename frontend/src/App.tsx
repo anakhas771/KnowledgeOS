@@ -10,6 +10,7 @@ import Knowledge from './pages/Knowledge';
 import Documents from './pages/Documents';
 import Search from './pages/Search';
 import Settings from './pages/Settings';
+import Copilot from './pages/Copilot';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuthStore();
@@ -64,6 +65,7 @@ export default function App() {
         <Route path="knowledge" element={<Knowledge />} />
         <Route path="documents" element={<Documents />} />
         <Route path="search" element={<Search />} />
+        <Route path="copilot" element={<Copilot />} />
         <Route path="settings" element={<Settings />} />
       </Route>
     </Routes>
