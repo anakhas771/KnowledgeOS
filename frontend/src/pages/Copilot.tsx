@@ -3,10 +3,32 @@ import type { KeyboardEvent } from 'react';
 import { Bot, Send, AlertCircle, FileText, Loader2, StopCircle, Plus, MessageSquare } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { knowledgeApi } from '../features/knowledge/api/knowledgeApi';
-import type { RAGSource, RAGMetrics, Conversation, Message } from '../features/knowledge/types';
+import type { RAGSource, RAGMetrics, Conversation, Message, ChunkEvidence } from '../features/knowledge/types';
 
 export default function Copilot() {
   const [query, setQuery] = useState('');
+
+  // Evidence Modal State
+  const [evidence, setEvidence] = useState<{ isLoading: boolean, data?: ChunkEvidence, error?: string } | null>(null);
+  const [evidenceCache, setEvidenceCache] = useState<Record<number, ChunkEvidence>>({});
+
+  const handleCitationClick = async (chunkId: number) => {
+    // Show modal immediately with loading or cached data
+    if (evidenceCache[chunkId]) {
+      setEvidence({ isLoading: false, data: evidenceCache[chunkId] });
+      return;
+    }
+
+    setEvidence({ isLoading: true });
+
+    try {
+      const data = await knowledgeApi.getChunkEvidence(chunkId);
+      setEvidenceCache(prev => ({ ...prev, [chunkId]: data }));
+      setEvidence({ isLoading: false, data });
+    } catch (err: any) {
+      setEvidence({ isLoading: false, error: 'Failed to load source evidence.' });
+    }
+  };
 
   const renderTextWithCitations = (text: string, sources: RAGSource[] | null) => {
     if (!text) return null;
@@ -32,7 +54,8 @@ export default function Copilot() {
       return (
         <span
           key={index}
-          className="inline-flex items-center justify-center bg-blue-100 text-blue-800 text-xs font-bold px-1.5 py-0.5 rounded mx-1 cursor-help relative group"
+          onClick={() => handleCitationClick(source.chunk_id)}
+          className="inline-flex items-center justify-center bg-blue-100 text-blue-800 text-xs font-bold px-1.5 py-0.5 rounded mx-1 cursor-pointer hover:bg-blue-200 transition-colors relative group"
           title={source.document_title}
         >
           {sourceNum}
@@ -393,6 +416,41 @@ export default function Copilot() {
           </div>
         </div>
       </div>
+
+      {/* Evidence Modal */}
+      {evidence && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="font-semibold text-lg flex items-center gap-2 text-gray-900">
+                 <FileText className="h-5 w-5 text-blue-600"/> Source Evidence
+              </h3>
+              <button onClick={() => setEvidence(null)} className="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</button>
+            </div>
+            <div className="p-4 overflow-y-auto">
+               {evidence.isLoading && (
+                 <div className="flex justify-center p-8 text-gray-500">
+                   <Loader2 className="animate-spin h-8 w-8"/>
+                 </div>
+               )}
+               {evidence.error && (
+                 <div className="flex items-start gap-3 p-4 bg-red-50 text-red-700 rounded-md">
+                   <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                   <p>{evidence.error}</p>
+                 </div>
+               )}
+               {evidence.data && (
+                 <>
+                   <h4 className="font-medium text-gray-900 mb-3">{evidence.data.document_title}</h4>
+                   <div className="bg-gray-50 p-4 rounded text-sm text-gray-800 whitespace-pre-wrap border font-serif leading-relaxed">
+                      {evidence.data.content}
+                   </div>
+                 </>
+               )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

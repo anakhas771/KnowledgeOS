@@ -8,7 +8,8 @@ vi.mock('../api/knowledgeApi', () => ({
   knowledgeApi: {
     askKnowledge: vi.fn(),
     getConversations: vi.fn(),
-    getConversation: vi.fn()
+    getConversation: vi.fn(),
+    getChunkEvidence: vi.fn()
   }
 }));
 
@@ -231,5 +232,81 @@ describe('Copilot UI Component Phase 21', () => {
 
     const docBElements = screen.getAllByText('Doc B');
     expect(docBElements.length).toBe(2); // 1 in tooltip, 1 in Sources Used
+  });
+
+  it('citation click opens evidence modal and loads exact chunk content (Phase 23)', async () => {
+    (knowledgeApi.askKnowledge as any).mockImplementationOnce(
+      async (_req: any, onToken: any, onDone: any) => {
+        onToken('Fact one [Source 1]. Fact two [Source 2]. Fact three [Source 3].');
+        onDone({
+          type: 'done',
+          sources: [
+            { document_id: 1, document_title: 'Doc A', score: 0.95, chunk_id: 101 },
+            { document_id: 1, document_title: 'Doc A', score: 0.90, chunk_id: 102 },
+            { document_id: 2, document_title: 'Doc B', score: 0.85, chunk_id: 201 }
+          ],
+          metrics: {}
+        });
+      }
+    );
+
+    render(<Copilot />);
+
+    // Trigger RAG
+    const input = screen.getByPlaceholderText('Ask a question...');
+    fireEvent.change(input, { target: { value: 'Test evidence' } });
+    fireEvent.click(screen.getAllByRole('button')[screen.getAllByRole('button').length - 1]);
+
+    await waitFor(() => {
+      expect(screen.getByText('1')).toBeTruthy();
+      expect(screen.getByText('2')).toBeTruthy();
+      expect(screen.getByText('3')).toBeTruthy();
+    });
+
+    // Mock evidence responses
+    (knowledgeApi.getChunkEvidence as any).mockResolvedValueOnce({
+      chunk_id: 101,
+      document_id: 1,
+      document_title: 'Doc A',
+      content: 'Exact text for chunk 101'
+    });
+
+    (knowledgeApi.getChunkEvidence as any).mockResolvedValueOnce({
+      chunk_id: 201,
+      document_id: 2,
+      document_title: 'Doc B',
+      content: 'Exact text for chunk 201'
+    });
+
+    // 1. Click Source 1 -> Should fetch chunk 101
+    fireEvent.click(screen.getByText('1'));
+
+    await waitFor(() => {
+      expect(knowledgeApi.getChunkEvidence).toHaveBeenCalledWith(101);
+      expect(screen.getByText('Exact text for chunk 101')).toBeTruthy();
+    });
+
+    // 2. Click Source 3 -> Should fetch chunk 201 (prove positional mapping works)
+    fireEvent.click(screen.getByText('3'));
+
+    await waitFor(() => {
+      expect(knowledgeApi.getChunkEvidence).toHaveBeenCalledWith(201);
+      expect(screen.getByText('Exact text for chunk 201')).toBeTruthy();
+    });
+
+    // 3. Error handling mock
+    (knowledgeApi.getChunkEvidence as any).mockRejectedValueOnce(new Error('Network error'));
+    fireEvent.click(screen.getByText('2'));
+
+    await waitFor(() => {
+      expect(knowledgeApi.getChunkEvidence).toHaveBeenCalledWith(102);
+      expect(screen.getByText('Failed to load source evidence.')).toBeTruthy();
+    });
+
+    // Close modal
+    fireEvent.click(screen.getByText('×'));
+    await waitFor(() => {
+      expect(screen.queryByText('Failed to load source evidence.')).toBeNull();
+    });
   });
 });

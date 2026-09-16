@@ -44,6 +44,23 @@ class SearchResponseSerializer(serializers.Serializer):
 
 
 # ---------------------------------------------------------------------------
+# Source Evidence
+# ---------------------------------------------------------------------------
+
+from apps.documents.models import DocumentChunk
+
+class ChunkEvidenceSerializer(serializers.ModelSerializer):
+    document_title = serializers.CharField(source="document.title", read_only=True)
+    chunk_id = serializers.IntegerField(source="id", read_only=True)
+    document_id = serializers.IntegerField(source="document.id", read_only=True)
+
+    class Meta:
+        model = DocumentChunk
+        fields = ("chunk_id", "document_id", "document_title", "content")
+
+
+
+# ---------------------------------------------------------------------------
 # Conversation serializers
 # ---------------------------------------------------------------------------
 

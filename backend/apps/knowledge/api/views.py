@@ -23,12 +23,14 @@ from apps.knowledge.models import Conversation, Message
 from apps.knowledge.services.query_embedding import embed_query
 from apps.knowledge.services.retrieval import search_similar_chunks
 from apps.knowledge.services.search import perform_search
+from apps.documents.models import DocumentChunk
 
 from .serializers import (
     AskRequestSerializer,
     ConversationSerializer,
     SearchRequestSerializer,
     SearchResponseSerializer,
+    ChunkEvidenceSerializer,
 )
 
 # ---------------------------------------------------------------------------
@@ -203,6 +205,24 @@ class SearchAPIView(APIView):
         response_serializer = SearchResponseSerializer(data=result_data)
         response_serializer.is_valid(raise_exception=True)
         return Response(response_serializer.validated_data, status=status.HTTP_200_OK)
+
+
+class ChunkEvidenceAPIView(APIView):
+    """
+    Retrieve exact evidence content for a single chunk.
+    Enforces tenant boundaries via organization_id.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, chunk_id, *args, **kwargs):
+        # Strict tenant boundary enforced
+        chunk = get_object_or_404(
+            DocumentChunk,
+            pk=chunk_id,
+            document__organization_id=request.user.organization_id
+        )
+        serializer = ChunkEvidenceSerializer(chunk)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class AskAPIView(APIView):
