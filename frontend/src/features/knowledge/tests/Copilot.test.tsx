@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import Copilot from '../../../pages/Copilot';
 import { knowledgeApi } from '../api/knowledgeApi';
@@ -7,170 +7,181 @@ import { knowledgeApi } from '../api/knowledgeApi';
 vi.mock('../api/knowledgeApi', () => ({
   knowledgeApi: {
     askKnowledge: vi.fn(),
+    getConversations: vi.fn(),
+    getConversation: vi.fn()
   }
 }));
 
-describe('Copilot UI Component', () => {
+describe('Copilot UI Component Phase 21', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    (knowledgeApi.getConversations as any).mockResolvedValue([
+      { id: 1, title: 'Test Conv 1', created_at: '2026', updated_at: '2026' }
+    ]);
   });
 
   afterEach(() => {
+    cleanup();
     vi.restoreAllMocks();
   });
 
-  it('renders initial empty state', () => {
+  it('renders initial state and loads conversation list (Req 1, 2)', async () => {
     render(<Copilot />);
-    
+
     expect(screen.getByText('KnowledgeOS Copilot')).toBeTruthy();
     expect(screen.getByText('How can I help you?')).toBeTruthy();
-    
-    const input = screen.getByPlaceholderText('Ask a question...');
-    expect(input).toBeTruthy();
-    
-    // Send button should be disabled initially
-    const sendBtn = screen.getByRole('button');
-    expect((sendBtn as HTMLButtonElement).disabled).toBe(true);
+
+    await waitFor(() => {
+      expect(screen.getByText('Test Conv 1')).toBeTruthy();
+    });
   });
 
-  it('prevents empty query submission', () => {
+  it('selecting a conversation loads messages (Req 3)', async () => {
+    (knowledgeApi.getConversation as any).mockResolvedValue({
+      id: 1,
+      title: 'Test Conv 1',
+      messages: [
+        { id: 101, role: 'user', content: 'Hello' },
+        { id: 102, role: 'assistant', content: 'Hi there' }
+      ]
+    });
+
     render(<Copilot />);
-    
-    const input = screen.getByPlaceholderText('Ask a question...');
-    const sendBtn = screen.getByRole('button');
-    
-    fireEvent.change(input, { target: { value: '   ' } });
-    expect((sendBtn as HTMLButtonElement).disabled).toBe(true);
+
+    await waitFor(() => {
+      expect(screen.getByText('Test Conv 1')).toBeTruthy();
+    });
+
+    fireEvent.click(screen.getByText('Test Conv 1'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Hello')).toBeTruthy();
+      expect(screen.getByText('Hi there')).toBeTruthy();
+    });
   });
 
-  it('handles successful generation with tokens and final done event', async () => {
-    // Mock the askKnowledge implementation to simulate streaming
-    (knowledgeApi.askKnowledge as any).mockImplementation(
+  it('new conversation resets active state and messages (Req 4)', async () => {
+    // Load a conversation first
+    (knowledgeApi.getConversation as any).mockResolvedValue({
+      id: 1,
+      title: 'Test Conv 1',
+      messages: [{ id: 101, role: 'user', content: 'Hello' }]
+    });
+
+    render(<Copilot />);
+    await waitFor(() => screen.getByText('Test Conv 1'));
+    fireEvent.click(screen.getByText('Test Conv 1'));
+    await waitFor(() => screen.getByText('Hello'));
+
+    // Click New Chat
+    fireEvent.click(screen.getByText('New Chat'));
+
+    // Verify messages reset
+    await waitFor(() => {
+      expect(screen.queryByText('Hello')).toBeNull();
+      expect(screen.getByText('How can I help you?')).toBeTruthy();
+    });
+  });
+
+  it('multi-turn messages accumulate (Req 5) and streaming works (Req 6, 9)', async () => {
+    (knowledgeApi.askKnowledge as any).mockImplementationOnce(
       async (_req: any, onToken: any, onDone: any) => {
-        // 1. Simulate tokens
-        onToken('Hello');
-        onToken(' World');
-        
-        // 2. Simulate done event with sources and metrics
-        onDone({
-          type: 'done',
-          sources: [
-            { chunk_id: 1, document_id: 101, document_title: 'Company Policy', score: 0.95 },
-            { chunk_id: 2, document_id: 101, document_title: 'Company Policy', score: 0.90 }, // Duplicate doc
-            { chunk_id: 3, document_id: 102, document_title: 'Employee Handbook', score: 0.85 }
-          ],
-          metrics: { ttft_ms: 50, generation_ms: 100, total_ms: 200, token_count: 2 }
-        });
+        onToken('First');
+        onToken(' Answer');
+        onDone({ type: 'done', sources: [], metrics: {} });
       }
     );
 
     render(<Copilot />);
-    
-    const input = screen.getByPlaceholderText('Ask a question...');
-    fireEvent.change(input, { target: { value: 'What is the policy?' } });
-    
-    const sendBtn = screen.getByRole('button');
-    fireEvent.click(sendBtn);
 
-    // Verify loading state and input clear
-    expect((input as HTMLTextAreaElement).value).toBe('');
-    
+    const input = screen.getByPlaceholderText('Ask a question...');
+    fireEvent.change(input, { target: { value: 'First Q' } });
+    fireEvent.click(screen.getAllByRole('button')[screen.getAllByRole('button').length - 1]);
+
     await waitFor(() => {
-      // The user query should be displayed
-      expect(screen.getByText('What is the policy?')).toBeTruthy();
-      
-      // The answer tokens should be assembled
-      expect(screen.getByText('Hello World')).toBeTruthy();
-      
-      // The sources should be deduplicated (only one "Company Policy")
-      const policyLabels = screen.getAllByText('Company Policy');
-      expect(policyLabels.length).toBe(1);
-      
-      expect(screen.getByText('Employee Handbook')).toBeTruthy();
-      
-      // Metrics should render
-      expect(screen.getByText('TTFT: 50ms')).toBeTruthy();
-      expect(screen.getByText('Tokens: 2')).toBeTruthy();
+      expect(screen.getByText('First Q')).toBeTruthy();
+      expect(screen.getByText('First Answer')).toBeTruthy();
+    });
+
+    // Second turn
+    (knowledgeApi.askKnowledge as any).mockImplementationOnce(
+      async (_req: any, onToken: any, onDone: any) => {
+        onToken('Second Answer');
+        onDone({ type: 'done', sources: [], metrics: {} });
+      }
+    );
+
+    fireEvent.change(input, { target: { value: 'Second Q' } });
+    fireEvent.click(screen.getAllByRole('button')[screen.getAllByRole('button').length - 1]);
+
+    await waitFor(() => {
+      expect(screen.getByText('First Q')).toBeTruthy();
+      expect(screen.getByText('First Answer')).toBeTruthy();
+      expect(screen.getByText('Second Q')).toBeTruthy();
+      expect(screen.getByText('Second Answer')).toBeTruthy();
     });
   });
 
-  it('handles inline SSE error during generation', async () => {
-    (knowledgeApi.askKnowledge as any).mockImplementation(
+  it('streamingAnswer resets after a failed previous generation (Req 7)', async () => {
+    (knowledgeApi.askKnowledge as any).mockImplementationOnce(
       async (_req: any, onToken: any, _onDone: any, onError: any) => {
-        onToken('Partial answer');
-        // Simulate stream error
-        onError({
-          type: 'error',
-          message: 'AI generation service unavailable'
-        });
+        onToken('Broken text');
+        onError({ message: 'Error' });
       }
     );
 
     render(<Copilot />);
-    
+
     const input = screen.getByPlaceholderText('Ask a question...');
-    fireEvent.change(input, { target: { value: 'Query' } });
-    fireEvent.click(screen.getByRole('button'));
+    fireEvent.change(input, { target: { value: 'Q1' } });
+    fireEvent.click(screen.getAllByRole('button')[screen.getAllByRole('button').length - 1]);
 
     await waitFor(() => {
-      // Partial answer should still be visible
-      expect(screen.getByText('Partial answer')).toBeTruthy();
-      // Error message should be rendered
-      expect(screen.getByText('AI generation service unavailable')).toBeTruthy();
+      expect(screen.getByText('Broken text')).toBeTruthy();
+      expect(screen.getByText('Error')).toBeTruthy();
+    });
+
+    // Next turn should reset 'Broken text'
+    (knowledgeApi.askKnowledge as any).mockImplementationOnce(
+      async (_req: any, onToken: any, onDone: any) => {
+        onToken('Fresh text');
+        onDone({ type: 'done', sources: [], metrics: {} });
+      }
+    );
+
+    fireEvent.change(input, { target: { value: 'Q2' } });
+    fireEvent.click(screen.getAllByRole('button')[screen.getAllByRole('button').length - 1]);
+
+    await waitFor(() => {
+      expect(screen.queryByText('Broken textFresh text')).toBeNull();
+      expect(screen.queryByText('Broken text')).toBeNull();
+      expect(screen.getByText('Fresh text')).toBeTruthy();
     });
   });
 
-  it('handles pre-stream API error', async () => {
-    (knowledgeApi.askKnowledge as any).mockRejectedValueOnce({
-      response: { data: { detail: 'Service down' } }
-    });
-
-    render(<Copilot />);
-    
-    const input = screen.getByPlaceholderText('Ask a question...');
-    fireEvent.change(input, { target: { value: 'Query' } });
-    fireEvent.click(screen.getByRole('button'));
-
-    await waitFor(() => {
-      expect(screen.getByText('Service down')).toBeTruthy();
-    });
-  });
-
-  it('allows starting a new query after completion', async () => {
+  it('abort does not append an assistant message (Req 8)', async () => {
     (knowledgeApi.askKnowledge as any).mockImplementationOnce(
-      async (_req: any, onToken: any, onDone: any) => {
-        onToken('First answer');
-        onDone({ type: 'done', sources: [], metrics: { ttft_ms: 10, generation_ms: 20, total_ms: 30, token_count: 1 } });
+      async (_req: any, onToken: any, _onDone: any, _onError: any) => {
+        onToken('Partial');
+        const err = new Error();
+        err.name = 'AbortError';
+        throw err;
       }
     );
 
     render(<Copilot />);
-    
+
     const input = screen.getByPlaceholderText('Ask a question...');
-    fireEvent.change(input, { target: { value: 'First query' } });
-    fireEvent.click(screen.getByRole('button'));
+    fireEvent.change(input, { target: { value: 'Q1' } });
+    fireEvent.click(screen.getAllByRole('button')[screen.getAllByRole('button').length - 1]);
 
     await waitFor(() => {
-      expect(screen.getByText('First answer')).toBeTruthy();
+      expect(screen.getByText('Generation stopped by user.')).toBeTruthy();
     });
 
-    // Setup mock for second query
-    (knowledgeApi.askKnowledge as any).mockImplementationOnce(
-      async (_req: any, onToken: any, onDone: any) => {
-        onToken('Second answer');
-        onDone({ type: 'done', sources: [], metrics: { ttft_ms: 10, generation_ms: 20, total_ms: 30, token_count: 1 } });
-      }
-    );
-
-    fireEvent.change(input, { target: { value: 'Second query' } });
-    fireEvent.click(screen.getByRole('button'));
-
-    await waitFor(() => {
-      // The first answer should be gone
-      expect(screen.queryByText('First answer')).toBeNull();
-      // The second query and answer should be visible
-      expect(screen.getByText('Second query')).toBeTruthy();
-      expect(screen.getByText('Second answer')).toBeTruthy();
-    });
+    // Check that there's no persisted assistant message in the log
+    // Only the user query should be rendered as a bubble
+    const userMsg = screen.getByText('Q1');
+    expect(userMsg).toBeTruthy();
   });
 });

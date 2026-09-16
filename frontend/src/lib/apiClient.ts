@@ -19,18 +19,65 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
+interface FailedRequest {
+  resolve: (value: string) => void;
+  reject: (reason?: any) => void;
+}
+
 let isRefreshing = false;
-let failedQueue: Array<{ resolve: (value?: unknown) => void; reject: (reason?: unknown) => void }> = [];
+let failedQueue: FailedRequest[] = [];
 
 const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
     } else {
-      prom.resolve(token);
+      prom.resolve(token as string);
     }
   });
   failedQueue = [];
+};
+
+export const refreshTokenHelper = (): Promise<string> => {
+  if (isRefreshing) {
+    return new Promise((resolve, reject) => {
+      failedQueue.push({ resolve, reject });
+    });
+  }
+
+  isRefreshing = true;
+
+  return new Promise(async (resolve, reject) => {
+    try {
+      const { data } = await axios.post(
+        `${API_BASE_URL}/api/v1/auth/refresh/`,
+        {},
+        { withCredentials: true }
+      );
+
+      const newAccessToken = data.access;
+      // Keep the existing user profile but update token
+      const currentUser = useAuthStore.getState().user;
+      if (currentUser) {
+          useAuthStore.getState().setAuth(currentUser, newAccessToken);
+      }
+
+      apiClient.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
+
+      resolve(newAccessToken);
+      processQueue(null, newAccessToken);
+    } catch (err) {
+      processQueue(err, null);
+      useAuthStore.getState().clearAuth();
+      // Redirect to login if not already there
+      if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+      }
+      reject(err);
+    } finally {
+      isRefreshing = false;
+    }
+  });
 };
 
 apiClient.interceptors.response.use(
@@ -39,49 +86,14 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry && originalRequest.url !== '/api/v1/auth/refresh/') {
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            return apiClient(originalRequest);
-          })
-          .catch((err) => Promise.reject(err));
-      }
-
       originalRequest._retry = true;
-      isRefreshing = true;
 
       try {
-        const { data } = await axios.post(
-          `${API_BASE_URL}/api/v1/auth/refresh/`,
-          {},
-          { withCredentials: true }
-        );
-        
-        const newAccessToken = data.access;
-        // Keep the existing user profile but update token
-        const currentUser = useAuthStore.getState().user;
-        if (currentUser) {
-            useAuthStore.getState().setAuth(currentUser, newAccessToken);
-        }
-
-        apiClient.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-
-        processQueue(null, newAccessToken);
+        const token = await refreshTokenHelper();
+        originalRequest.headers.Authorization = `Bearer ${token}`;
         return apiClient(originalRequest);
       } catch (err) {
-        processQueue(err, null);
-        useAuthStore.getState().clearAuth();
-        // Redirect to login if not already there
-        if (window.location.pathname !== '/login') {
-            window.location.href = '/login';
-        }
         return Promise.reject(err);
-      } finally {
-        isRefreshing = false;
       }
     }
     return Promise.reject(error);
