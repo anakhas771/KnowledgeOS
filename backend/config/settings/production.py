@@ -9,3 +9,4 @@ if not SECRET_KEY or SECRET_KEY == "development-secret-key":
 
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+JWT_REFRESH_COOKIE_SECURE = True

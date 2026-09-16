@@ -17,6 +17,22 @@ services:
     volumes:
       - knowledgeos_postgres_data:/var/lib/postgresql/data
 
+  frontend:
+    build:
+      context: ./frontend
+    container_name: knowledgeos_frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev -- --host
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000
+    networks:
+      - default
+
 
 
   redis:

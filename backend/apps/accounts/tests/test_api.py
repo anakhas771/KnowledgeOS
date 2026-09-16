@@ -15,6 +15,7 @@ class AccountsAPITests(TestCase):
         self.register_url = "/api/v1/auth/register/"
         self.login_url = "/api/v1/auth/login/"
         self.me_url = "/api/v1/auth/me/"
+        self.logout_url = "/api/v1/auth/logout/"
 
         self.user = AuthenticationService.register_user(
             organization_name="Test Org",
@@ -51,7 +52,9 @@ class AccountsAPITests(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("access", response.data)
-        self.assertIn("refresh", response.data)
+        self.assertNotIn("refresh", response.data)
+        self.assertTrue("refresh" in response.cookies)
+        self.assertEqual(response.cookies["refresh"]["httponly"], True)
 
     def test_me_view_authenticated_access(self):
         """Verify that an authenticated user can fetch their profile."""
@@ -91,3 +94,22 @@ class AccountsAPITests(TestCase):
         self.assertEqual(user.role, User.Role.ADMIN)
         # But they should NOT be a Django superuser
         self.assertFalse(user.is_superuser)
+
+    def test_logout_authenticated(self):
+        """Verify that an authenticated user can logout and the refresh cookie is cleared."""
+        self.client.force_authenticate(user=self.employee)
+        self.client.cookies["refresh"] = "dummy-refresh-token"
+        response = self.client.post(self.logout_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Check that the cookie was cleared
+        self.assertEqual(response.cookies["refresh"].value, "")
+
+    def test_logout_unauthenticated_clears_cookie(self):
+        """
+        Verify that an unauthenticated user (expired access token) can still
+        call logout to clear their refresh cookie.
+        """
+        self.client.cookies["refresh"] = "dummy-refresh-token"
+        response = self.client.post(self.logout_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.cookies["refresh"].value, "")
