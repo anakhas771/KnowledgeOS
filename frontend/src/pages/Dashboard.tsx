@@ -1,6 +1,6 @@
-import { 
-  FileText, 
-  Activity, 
+import {
+  FileText,
+  Activity,
   Database,
   Plus
 } from 'lucide-react';

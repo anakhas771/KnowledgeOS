@@ -54,7 +54,7 @@ describe('App & Protected Routes', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('Dashboard')).toBeTruthy();
+      expect(screen.getAllByText('Dashboard').length).toBeGreaterThan(0);
       expect(screen.getByText('john_doe')).toBeTruthy();
     });
   });
@@ -110,7 +110,7 @@ describe('App & Protected Routes', () => {
 
     // Wait for App load
     await waitFor(() => {
-      expect(screen.getByText('Dashboard')).toBeTruthy();
+      expect(screen.getAllByText('Dashboard').length).toBeGreaterThan(0);
     });
 
     // Click logout

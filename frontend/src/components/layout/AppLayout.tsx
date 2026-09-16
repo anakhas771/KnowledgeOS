@@ -2,13 +2,13 @@ import { Outlet, useNavigate, useLocation, Link } from 'react-router';
 import { useAuthStore } from '../../store/authStore';
 import { authApi } from '../../features/auth/api/authApi';
 import { Button } from '../ui/button';
-import { 
-  LayoutDashboard, 
-  Library, 
-  FileText, 
-  Search, 
+import {
+  LayoutDashboard,
+  Library,
+  FileText,
+  Search,
   Settings,
-  LogOut 
+  LogOut
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -43,7 +43,7 @@ export default function AppLayout() {
         <div className="flex h-16 items-center border-b px-6">
           <h1 className="text-xl font-bold tracking-tight">KnowledgeOS</h1>
         </div>
-        
+
         <nav className="flex-1 space-y-1 p-4">
           {NAVIGATION.map((item) => {
             const isActive = location.pathname.startsWith(item.href);
@@ -53,16 +53,16 @@ export default function AppLayout() {
                 to={item.href}
                 className={clsx(
                   'group flex items-center rounded-md px-3 py-2 text-sm font-medium',
-                  isActive 
-                    ? 'bg-gray-100 text-gray-900' 
+                  isActive
+                    ? 'bg-gray-100 text-gray-900'
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                 )}
               >
-                <item.icon 
+                <item.icon
                   className={clsx(
                     'mr-3 h-5 w-5 flex-shrink-0',
                     isActive ? 'text-gray-900' : 'text-gray-400 group-hover:text-gray-500'
-                  )} 
+                  )}
                 />
                 {item.name}
               </Link>
@@ -71,7 +71,7 @@ export default function AppLayout() {
         </nav>
 
         <div className="border-t p-4">
-          <Button 
+          <Button
             className="w-full justify-start text-red-600 bg-transparent hover:bg-red-50 hover:text-red-700 shadow-none font-medium"
             onClick={handleLogout}
           >
@@ -86,7 +86,7 @@ export default function AppLayout() {
         {/* Top Header */}
         <header className="flex h-16 items-center justify-between border-b bg-white px-8">
           <div className="flex-1" /> {/* Spacer */}
-          
+
           <div className="flex items-center space-x-4">
             {user && (
               <div className="text-sm flex items-center">

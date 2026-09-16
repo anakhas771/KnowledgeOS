@@ -59,7 +59,7 @@ describe('Authentication Security Assertions', () => {
 
     // Wait for App to load
     await waitFor(() => {
-      expect(screen.getByText('Dashboard')).toBeTruthy();
+      expect(screen.getAllByText('Dashboard').length).toBeGreaterThan(0);
     });
 
     // Perform Logout
