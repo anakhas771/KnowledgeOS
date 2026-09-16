@@ -57,6 +57,7 @@ describe('Authentication Pages', () => {
 
   it('TEST 2: Login Failure - shows error, clears state, no navigation', async () => {
     (authApi.login as any).mockRejectedValueOnce({
+      isAxiosError: true,
       response: { data: { detail: 'Invalid credentials' } }
     });
 
@@ -121,6 +122,7 @@ describe('Authentication Pages', () => {
 
   it('TEST 3: Registration Failure - displays validation errors', async () => {
     (authApi.register as any).mockRejectedValueOnce({
+      isAxiosError: true,
       response: { data: { username: ['This field must be unique.'] } }
     });
 

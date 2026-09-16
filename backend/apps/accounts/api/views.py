@@ -95,7 +95,7 @@ class RefreshTokenView(TokenRefreshView):
 class LogoutView(APIView):
     """Logout the user and clear the refresh cookie."""
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def post(self, request):
         response = Response({"detail": "Successfully logged out."}, status=status.HTTP_200_OK)

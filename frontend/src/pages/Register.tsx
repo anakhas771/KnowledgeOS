@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router';
+import axios from 'axios';
 import { authApi } from '../features/auth/api/authApi';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -24,8 +25,8 @@ export default function Register() {
     try {
       await authApi.register(formData);
       navigate('/login');
-    } catch (err: any) {
-      if (err.response?.data) {
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err) && err.response?.data) {
         setError(JSON.stringify(err.response.data));
       } else {
         setError('Registration failed.');

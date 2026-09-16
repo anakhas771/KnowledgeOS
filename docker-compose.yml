@@ -152,4 +152,5 @@ services:
 
 
 volumes:
+
   knowledgeos_postgres_data:

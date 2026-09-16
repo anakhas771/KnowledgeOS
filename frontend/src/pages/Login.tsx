@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router';
+import axios from 'axios';
 import { authApi } from '../features/auth/api/authApi';
 import { useAuthStore } from '../store/authStore';
 import { Button } from '../components/ui/button';
@@ -27,8 +28,8 @@ export default function Login() {
       
       setAuth(user, data.access);
       navigate('/app');
-    } catch (err: any) {
-      if (err.response?.data?.detail) {
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err) && err.response?.data?.detail) {
         setError(err.response.data.detail);
       } else {
         setError('Login failed. Please check your credentials.');
