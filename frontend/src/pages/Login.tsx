@@ -23,7 +23,7 @@ export default function Login() {
       const data = await authApi.login({ username, password });
       
       // We got the token, now fetch user profile
-      useAuthStore.getState().accessToken = data.access; // Temporarily set for the /me request
+      useAuthStore.setState({ accessToken: data.access }); // Temporarily set for the /me request
       const user = await authApi.me();
       
       setAuth(user, data.access);
