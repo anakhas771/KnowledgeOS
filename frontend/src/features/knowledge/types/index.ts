@@ -27,6 +27,7 @@ export interface SearchParams {
 // Copilot RAG Types
 export interface AskRequest {
   query: string;
+  conversation_id?: number | null;
 }
 
 export interface RAGSource {
@@ -45,6 +46,7 @@ export interface RAGMetrics {
 
 export interface RAGDoneEvent {
   type: 'done';
+  conversation_id: number;
   sources: RAGSource[];
   metrics: RAGMetrics;
 }
@@ -52,4 +54,19 @@ export interface RAGDoneEvent {
 export interface RAGErrorEvent {
   type: 'error';
   message: string;
+}
+
+export interface Message {
+  id: number;
+  role: 'user' | 'assistant';
+  content: string;
+  created_at: string;
+}
+
+export interface Conversation {
+  id: number;
+  title: string;
+  created_at: string;
+  updated_at: string;
+  messages: Message[];
 }

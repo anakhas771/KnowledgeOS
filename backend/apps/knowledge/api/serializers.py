@@ -1,5 +1,5 @@
 from rest_framework import serializers
-
+from apps.knowledge.models import Conversation, Message
 
 # ---------------------------------------------------------------------------
 # Search endpoint
@@ -44,6 +44,24 @@ class SearchResponseSerializer(serializers.Serializer):
 
 
 # ---------------------------------------------------------------------------
+# Conversation serializers
+# ---------------------------------------------------------------------------
+
+class MessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Message
+        fields = ("id", "role", "content", "created_at")
+
+class ConversationSerializer(serializers.ModelSerializer):
+    messages = MessageSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Conversation
+        fields = ("id", "title", "created_at", "updated_at", "messages")
+        read_only_fields = ("id", "created_at", "updated_at")
+
+
+# ---------------------------------------------------------------------------
 # Ask (RAG) endpoint
 # ---------------------------------------------------------------------------
 
@@ -59,3 +77,4 @@ class AskRequestSerializer(serializers.Serializer):
         trim_whitespace=True,
         max_length=2000,
     )
+    conversation_id = serializers.IntegerField(required=False, allow_null=True)

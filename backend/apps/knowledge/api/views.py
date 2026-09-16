@@ -11,19 +11,22 @@ import json
 import time
 
 from django.http import StreamingHttpResponse
-from rest_framework import status
+from django.shortcuts import get_object_or_404
+from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.ai_engine.services.ollama import OllamaUnavailableError, stream_generate
 from apps.ai_engine.services.rag import build_rag_prompt
+from apps.knowledge.models import Conversation, Message
 from apps.knowledge.services.query_embedding import embed_query
 from apps.knowledge.services.retrieval import search_similar_chunks
 from apps.knowledge.services.search import perform_search
 
 from .serializers import (
     AskRequestSerializer,
+    ConversationSerializer,
     SearchRequestSerializer,
     SearchResponseSerializer,
 )
@@ -150,6 +153,20 @@ def _ask_stream(prompt: str, chunks: list[dict], t_request_start: float):
     yield _sse_json(metadata)
 
 
+class ConversationViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    List and retrieve conversations for the authenticated user.
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = ConversationSerializer
+
+    def get_queryset(self):
+        return Conversation.objects.filter(
+            organization_id=self.request.user.organization_id,
+            user=self.request.user
+        ).prefetch_related("messages")
+
+
 # ---------------------------------------------------------------------------
 # Views
 # ---------------------------------------------------------------------------
@@ -216,17 +233,43 @@ class AskAPIView(APIView):
         serializer = AskRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         query: str = serializer.validated_data["query"]
+        conversation_id = serializer.validated_data.get("conversation_id")
 
-        # ------------------------------------------------------------------
-        # 2. Tenant isolation — org_id from authenticated user ONLY
-        # ------------------------------------------------------------------
         organization_id: int = request.user.organization_id
-
         t_request_start = time.monotonic()
 
-        # ------------------------------------------------------------------
-        # 3. Embed query  (returns 503 on failure — before streaming)
-        # ------------------------------------------------------------------
+        conversation = None
+        history = []
+
+        if conversation_id:
+            conversation = get_object_or_404(
+                Conversation,
+                id=conversation_id,
+                organization_id=organization_id,
+                user=request.user
+            )
+            # Fetch last 6 messages (3 turns)
+            last_msgs = conversation.messages.order_by("-created_at")[:6]
+            history = [
+                {"role": m.role, "content": m.content}
+                for m in reversed(last_msgs)
+            ]
+        else:
+            conversation = Conversation.objects.create(
+                organization_id=organization_id,
+                user=request.user,
+                title=query[:50] + ("..." if len(query) > 50 else "")
+            )
+
+        # Save user message immediately
+        Message.objects.create(
+            conversation=conversation,
+            role="user",
+            content=query
+        )
+        # Update conversation timestamp manually in case generation fails
+        conversation.save(update_fields=["updated_at"])
+
         t0 = time.monotonic()
         try:
             query_embedding = embed_query(query)
@@ -257,7 +300,7 @@ class AskAPIView(APIView):
         # ------------------------------------------------------------------
         # 5. Build RAG prompt  (pure Python — cannot fail in practice)
         # ------------------------------------------------------------------
-        prompt = build_rag_prompt(query=query, chunks=chunks)
+        prompt = build_rag_prompt(query=query, chunks=chunks, history=history)
 
         # ------------------------------------------------------------------
         # 6. Return streaming response
@@ -272,6 +315,7 @@ class AskAPIView(APIView):
             generation_start: float | None = None
             token_count: int = 0
 
+            _stream_with_metrics.generated_tokens = []
             try:
                 for token, done_stats in stream_generate(prompt):
                     if done_stats is not None:
@@ -282,6 +326,7 @@ class AskAPIView(APIView):
                         t_first_token = time.monotonic()
                         generation_start = t_first_token
 
+                    _stream_with_metrics.generated_tokens.append(token)
                     yield _sse(token)
 
             except OllamaUnavailableError:
@@ -293,6 +338,17 @@ class AskAPIView(APIView):
 
             # Final metadata event
             t_end = time.monotonic()
+
+            # Save assistant message on success
+            if generation_start is not None:
+                assistant_content = "".join([c for c in _stream_with_metrics.generated_tokens])
+                if assistant_content:
+                    Message.objects.create(
+                        conversation=conversation,
+                        role="assistant",
+                        content=assistant_content
+                    )
+                    conversation.save(update_fields=["updated_at"])
 
             ttft_ms = (
                 int((t_first_token - t_ollama_start) * 1000)
@@ -308,6 +364,7 @@ class AskAPIView(APIView):
 
             metadata = {
                 "type": "done",
+                "conversation_id": conversation.id,
                 "sources": _safe_sources(chunks),
                 "metrics": {
                     "embedding_ms": embedding_ms,
