@@ -1,6 +1,6 @@
 import { apiClient, refreshTokenHelper } from '../../../lib/apiClient';
 import { useAuthStore } from '../../../store/authStore';
-import type { SearchResponse, SearchParams, AskRequest, RAGDoneEvent, RAGErrorEvent, Conversation } from '../types';
+import type { SearchResponse, SearchParams, AskRequest, RAGDoneEvent, RAGErrorEvent, Conversation, ChunkEvidence } from '../types';
 
 export const knowledgeApi = {
   searchKnowledge: async (params: SearchParams): Promise<SearchResponse> => {
@@ -15,6 +15,11 @@ export const knowledgeApi = {
 
   getConversation: async (id: number): Promise<Conversation> => {
     const response = await apiClient.get<Conversation>(`/api/v1/knowledge/conversations/${id}/`);
+    return response.data;
+  },
+
+  getChunkEvidence: async (chunkId: number): Promise<ChunkEvidence> => {
+    const response = await apiClient.get<ChunkEvidence>(`/api/v1/knowledge/chunks/${chunkId}/`);
     return response.data;
   },
 

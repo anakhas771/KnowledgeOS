@@ -18,6 +18,13 @@ export interface SearchResponse {
   meta: SearchMeta;
 }
 
+export interface ChunkEvidence {
+  chunk_id: number;
+  document_id: number;
+  document_title: string;
+  content: string;
+}
+
 export interface SearchParams {
   query: string;
   limit?: number;
