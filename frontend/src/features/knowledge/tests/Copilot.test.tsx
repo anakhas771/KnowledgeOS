@@ -184,4 +184,52 @@ describe('Copilot UI Component Phase 21', () => {
     const userMsg = screen.getByText('Q1');
     expect(userMsg).toBeTruthy();
   });
+
+  it('preserves exact citation mapping without deduplicating inline (Phase 22)', async () => {
+    (knowledgeApi.askKnowledge as any).mockImplementationOnce(
+      async (_req: any, onToken: any, onDone: any) => {
+        onToken('Fact one [Source 1]. Fact two [Source 2]. Fact three [Source 3].');
+        onDone({
+          type: 'done',
+          sources: [
+            { document_id: 1, document_title: 'Doc A', score: 0.95, chunk_id: 101 },
+            { document_id: 1, document_title: 'Doc A', score: 0.90, chunk_id: 102 },
+            { document_id: 2, document_title: 'Doc B', score: 0.85, chunk_id: 201 }
+          ],
+          metrics: {}
+        });
+      }
+    );
+
+    render(<Copilot />);
+
+    const input = screen.getByPlaceholderText('Ask a question...');
+    fireEvent.change(input, { target: { value: 'Test citations' } });
+    fireEvent.click(screen.getAllByRole('button')[screen.getAllByRole('button').length - 1]);
+
+    await waitFor(() => {
+      // The text itself should render with the source pills
+      expect(screen.getByText('Fact one')).toBeTruthy();
+      expect(screen.getByText('1')).toBeTruthy(); // The number inside the pill
+      expect(screen.getByText('2')).toBeTruthy();
+      expect(screen.getByText('3')).toBeTruthy();
+    });
+
+    // Check mapping based on relevance scores (since Doc A is duplicated)
+    expect(screen.getByText('Relevance: 95.0%')).toBeTruthy(); // Source 1
+    expect(screen.getByText('Relevance: 90.0%')).toBeTruthy(); // Source 2
+    expect(screen.getByText('Relevance: 85.0%')).toBeTruthy(); // Source 3
+
+    // Verify "Sources Used" deduplicates correctly visually
+    // It should show 'Doc A' and 'Doc B', but 'Doc A' should only appear once in the Sources Used section
+    // Since 'Doc A' also appears in the tooltips, we count them.
+    // In tooltips: Doc A (Source 1), Doc A (Source 2).
+    // In Sources Used: Doc A (deduplicated).
+    // Total 'Doc A' in document = 3
+    const docAElements = screen.getAllByText('Doc A');
+    expect(docAElements.length).toBe(3);
+
+    const docBElements = screen.getAllByText('Doc B');
+    expect(docBElements.length).toBe(2); // 1 in tooltip, 1 in Sources Used
+  });
 });

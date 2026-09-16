@@ -270,9 +270,21 @@ class AskAPIView(APIView):
         # Update conversation timestamp manually in case generation fails
         conversation.save(update_fields=["updated_at"])
 
+        # Deterministic query composition for semantic context
+        embedding_query = query
+        if history:
+            # Use the immediate preceding turn (last 2 messages max)
+            last_turn = history[-2:]
+            context_prefix = " ".join([m.get("content", "") for m in last_turn]).strip()
+            # Bound context to ~300 chars so current query remains dominant
+            if len(context_prefix) > 300:
+                context_prefix = context_prefix[-300:]
+            if context_prefix:
+                embedding_query = f"{context_prefix}\n{query}".strip()
+
         t0 = time.monotonic()
         try:
-            query_embedding = embed_query(query)
+            query_embedding = embed_query(embedding_query)
         except Exception:
             return Response(
                 {"detail": "Embedding service unavailable. Please try again later."},
