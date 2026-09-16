@@ -1,4 +1,5 @@
 import { Outlet, useNavigate, useLocation, Link } from 'react-router';
+import { useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { authApi } from '../../features/auth/api/authApi';
 import { Button } from '../ui/button';
@@ -8,7 +9,9 @@ import {
   FileText,
   Search,
   Settings,
-  LogOut
+  LogOut,
+  Menu,
+  X
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -24,6 +27,7 @@ export default function AppLayout() {
   const { user, clearAuth } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -37,11 +41,31 @@ export default function AppLayout() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 text-gray-900">
+    <div className="flex h-screen bg-gray-50 text-gray-900 overflow-hidden">
+      {/* Mobile Overlay */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-gray-900/50 md:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <div className="flex w-64 flex-col border-r bg-white">
-        <div className="flex h-16 items-center border-b px-6">
+      <div
+        className={clsx(
+          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r bg-white transition-transform md:static md:translate-x-0",
+          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <div className="flex h-16 items-center justify-between border-b px-6">
           <h1 className="text-xl font-bold tracking-tight">KnowledgeOS</h1>
+          <Button
+            className="md:hidden bg-transparent shadow-none hover:bg-gray-100 text-gray-500 px-2 h-auto py-1"
+            onClick={() => setMobileMenuOpen(false)}
+            aria-label="Close sidebar"
+          >
+            <X className="h-5 w-5" />
+          </Button>
         </div>
 
         <nav className="flex-1 space-y-1 p-4">
@@ -51,6 +75,7 @@ export default function AppLayout() {
               <Link
                 key={item.name}
                 to={item.href}
+                onClick={() => setMobileMenuOpen(false)}
                 className={clsx(
                   'group flex items-center rounded-md px-3 py-2 text-sm font-medium',
                   isActive
@@ -84,8 +109,16 @@ export default function AppLayout() {
       {/* Main Content Area */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Top Header */}
-        <header className="flex h-16 items-center justify-between border-b bg-white px-8">
-          <div className="flex-1" /> {/* Spacer */}
+        <header className="flex h-16 items-center justify-between border-b bg-white px-4 md:px-8">
+          <div className="flex flex-1 items-center">
+            <Button
+              className="mr-4 px-2 text-gray-600 bg-transparent shadow-none hover:bg-gray-100 md:hidden h-auto py-1"
+              onClick={() => setMobileMenuOpen(true)}
+              aria-label="Open menu"
+            >
+              <Menu className="h-6 w-6" />
+            </Button>
+          </div>
 
           <div className="flex items-center space-x-4">
             {user && (
