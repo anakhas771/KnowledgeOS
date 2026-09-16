@@ -8,6 +8,43 @@ import type { RAGSource, RAGMetrics, Conversation, Message } from '../features/k
 export default function Copilot() {
   const [query, setQuery] = useState('');
 
+  const renderTextWithCitations = (text: string, sources: RAGSource[] | null) => {
+    if (!text) return null;
+
+    // Split by [Source N]
+    const parts = text.split(/\[Source (\d+)\]/g);
+
+    return parts.map((part, index) => {
+      // Even indices are regular text, odd indices are the captured source number
+      if (index % 2 === 0) {
+        return <span key={index}>{part}</span>;
+      }
+
+      const sourceNum = parseInt(part, 10);
+
+      // If we don't have sources or the number is invalid, render as plain text
+      if (!sources || isNaN(sourceNum) || sourceNum < 1 || sourceNum > sources.length) {
+        return <span key={index}>[Source {part}]</span>;
+      }
+
+      const source = sources[sourceNum - 1];
+
+      return (
+        <span
+          key={index}
+          className="inline-flex items-center justify-center bg-blue-100 text-blue-800 text-xs font-bold px-1.5 py-0.5 rounded mx-1 cursor-help relative group"
+          title={source.document_title}
+        >
+          {sourceNum}
+          <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-gray-900 text-white text-[10px] font-normal rounded shadow-lg z-10 whitespace-normal break-words leading-tight">
+            {source.document_title}
+            {source.score !== undefined && <span className="block text-gray-400 mt-1">Relevance: {(source.score * 100).toFixed(1)}%</span>}
+          </div>
+        </span>
+      );
+    });
+  };
+
   // Conversations List
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<number | null>(null);
@@ -108,14 +145,8 @@ export default function Copilot() {
         (event) => {
           setIsGenerating(false);
 
-          // Deduplicate sources by document_id
-          const uniqueSourcesMap = new Map<number, RAGSource>();
-          event.sources.forEach((source) => {
-            if (!uniqueSourcesMap.has(source.document_id)) {
-              uniqueSourcesMap.set(source.document_id, source);
-            }
-          });
-          setLatestSources(Array.from(uniqueSourcesMap.values()));
+          // Store raw sources exactly as provided to preserve positional citation numbering
+          setLatestSources(event.sources || []);
           setLatestMetrics(event.metrics);
 
           // Move streaming answer to messages
@@ -248,7 +279,9 @@ export default function Copilot() {
                   : 'bg-gray-50 border border-gray-100 rounded-tl-sm text-gray-800'
               }`}>
                 <div className={`whitespace-pre-wrap ${msg.role === 'user' ? 'text-sm' : 'prose prose-sm prose-blue max-w-none'} leading-relaxed`}>
-                  {msg.content}
+                  {msg.role === 'assistant' && idx === messages.length - 1
+                    ? renderTextWithCitations(msg.content, latestSources)
+                    : renderTextWithCitations(msg.content, null)}
                 </div>
 
                 {/* Append sources/metrics ONLY to the LAST assistant message in the list if they are available */}
@@ -259,7 +292,7 @@ export default function Copilot() {
                         <FileText className="w-3 h-3 mr-1" /> Sources Used
                       </h4>
                       <div className="flex flex-wrap gap-2">
-                        {latestSources.map((src) => (
+                        {Array.from(new Map(latestSources.map((s) => [s.document_id, s])).values()).map((src) => (
                           <div
                             key={src.document_id}
                             className="inline-flex items-center rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700"
@@ -288,7 +321,7 @@ export default function Copilot() {
             <div className="flex justify-start">
               <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-gray-50 px-5 py-4 border border-gray-100">
                 <div className="prose prose-sm prose-blue max-w-none text-gray-800 whitespace-pre-wrap leading-relaxed">
-                  {streamingAnswer}
+                  {renderTextWithCitations(streamingAnswer, latestSources)}
                   <span className="ml-1 inline-block h-4 w-2 animate-pulse bg-blue-500 rounded-sm" />
                 </div>
               </div>
