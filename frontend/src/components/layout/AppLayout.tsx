@@ -11,7 +11,8 @@ import {
   Settings,
   LogOut,
   Menu,
-  X
+  X,
+  MessageSquare
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -20,6 +21,7 @@ const NAVIGATION = [
   { name: 'Knowledge', href: '/app/knowledge', icon: Library },
   { name: 'Documents', href: '/app/documents', icon: FileText },
   { name: 'Search', href: '/app/search', icon: Search },
+  { name: 'Copilot', href: '/app/copilot', icon: MessageSquare },
   { name: 'Settings', href: '/app/settings', icon: Settings },
 ];
 
