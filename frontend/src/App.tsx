@@ -4,7 +4,12 @@ import { useAuthStore } from './store/authStore';
 import { authApi } from './features/auth/api/authApi';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import AppProtected from './pages/AppProtected';
+import AppLayout from './components/layout/AppLayout';
+import Dashboard from './pages/Dashboard';
+import Knowledge from './pages/Knowledge';
+import Documents from './pages/Documents';
+import Search from './pages/Search';
+import Settings from './pages/Settings';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuthStore();
@@ -47,13 +52,20 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route 
-        path="/app/*" 
+        path="/app"
         element={
           <ProtectedRoute>
-            <AppProtected />
+            <AppLayout />
           </ProtectedRoute>
         } 
-      />
+      >
+        <Route index element={<Navigate to="/app/dashboard" replace />} />
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="knowledge" element={<Knowledge />} />
+        <Route path="documents" element={<Documents />} />
+        <Route path="search" element={<Search />} />
+        <Route path="settings" element={<Settings />} />
+      </Route>
     </Routes>
   );
 }

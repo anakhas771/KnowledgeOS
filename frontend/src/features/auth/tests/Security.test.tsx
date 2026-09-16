@@ -59,7 +59,7 @@ describe('Authentication Security Assertions', () => {
 
     // Wait for App to load
     await waitFor(() => {
-      expect(screen.getByText('KnowledgeOS Dashboard')).toBeTruthy();
+      expect(screen.getByText('Dashboard')).toBeTruthy();
     });
 
     // Perform Logout
